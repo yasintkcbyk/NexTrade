@@ -1,0 +1,18 @@
+# Çevre Değişkenleri (Hassas Bilgiler)
+.env
+*.env
+
+# Node.js / React (Frontend)
+node_modules/
+dist/
+.npm/
+
+# Python / FastAPI (Backend)
+__pycache__/
+venv/
+env/
+*.pyc
+
+# SQLite Veritabanı
+*.db
+*.sqlite3

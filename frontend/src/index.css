@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+body {
+  background-color: #0f172a; /* Koyu mavi/gri arka plan */
+  color: #f8fafc; /* Açık renk metin */
+}
