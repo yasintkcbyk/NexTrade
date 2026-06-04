@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
-from app.routers import stocks, crypto, alerts
+from app.routers import stocks, crypto, alerts, ai
 from app.services.alert_checker import check_prices_periodically
 
 app = FastAPI(title="Yatırım Asistanı API")
@@ -19,6 +19,7 @@ app.add_middleware(
 app.include_router(stocks.router)
 app.include_router(crypto.router)
 app.include_router(alerts.router)
+app.include_router(ai.router)
 
 @app.on_event("startup")
 async def startup_event():

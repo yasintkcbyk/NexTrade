@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import axios from 'axios'
-import { LineChart, Bell, Newspaper, TrendingUp, ChevronUp, ChevronDown, Search, ArrowRightLeft, Bot } from 'lucide-react'
+import { LineChart, Bell, Newspaper, TrendingUp, ChevronUp, ChevronDown, Search, ArrowRightLeft, Bot, MessageCircle, X, Send, Sparkles } from 'lucide-react'
 import Chart from './components/Chart'
 
 // Arayüzü yapılandırmak için örnek piyasa listesi (Liste görünümü için)
@@ -53,6 +53,14 @@ function App() {
   const [isLoadingNews, setIsLoadingNews] = useState(false)
   const [timeframe, setTimeframe] = useState('1D');
   const [showSignals, setShowSignals] = useState(false);
+
+  // Yapay Zeka (AI) State'leri
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState([{ sender: 'ai', text: 'Merhaba! Ben nextTrade yapay zeka asistanıyım. Piyasa hakkında bana istediğinizi sorabilirsiniz.' }]);
+  const [chatInput, setChatInput] = useState('');
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState(null);
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
 
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -117,6 +125,40 @@ function App() {
         .finally(() => setIsLoadingNews(false));
     }
   }, [activeModule]);
+
+  // Yapay Zeka Chat Mesaj Gönderme
+  const handleSendMessage = async () => {
+    if (!chatInput.trim()) return;
+    const userMsg = chatInput;
+    setChatMessages(prev => [...prev, { sender: 'user', text: userMsg }]);
+    setChatInput('');
+    setIsChatLoading(true);
+    
+    try {
+      const res = await axios.post(`${API_BASE_URL}/api/ai/chat`, { message: userMsg });
+      setChatMessages(prev => [...prev, { sender: 'ai', text: res.data.reply }]);
+    } catch (error) {
+      setChatMessages(prev => [...prev, { sender: 'ai', text: 'Üzgünüm, şu an bağlantı kuramıyorum. API anahtarını kontrol edin.' }]);
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
+
+  // Yapay Zeka Grafik Yorumlatma
+  const handleAnalyzeChart = async () => {
+    setShowAnalysisModal(true);
+    setAiAnalysis(null);
+    try {
+      const res = await axios.post(`${API_BASE_URL}/api/ai/analyze-chart`, {
+        symbol: selectedAsset.symbol,
+        current_price: selectedAsset.price,
+        chart_data: chartData
+      });
+      setAiAnalysis(res.data.analysis);
+    } catch (error) {
+      setAiAnalysis('Analiz alınırken bir hata oluştu. API anahtarınızı kontrol edin.');
+    }
+  };
 
   // Tablo Verisini Filtreleme ve Sıralama (Akıllı Tablo Mantığı)
   const filteredAndSortedData = useMemo(() => {
@@ -246,6 +288,9 @@ function App() {
                       </button>
                     ))}
                   </div>
+                <button onClick={handleAnalyzeChart} className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 font-medium">
+                  <Sparkles className="w-4 h-4" /> AI Yorumla
+                </button>
                   <button onClick={() => setShowSignals(!showSignals)} className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition ${showSignals ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-700 hover:bg-slate-600'}`}>
                     <Bot className="w-4 h-4" /> Analiz Sinyalleri
                   </button>
@@ -283,6 +328,62 @@ function App() {
 
           {activeModule === 'alerts' && (<div className="w-full flex items-center justify-center text-slate-400 text-xl">Alarmlar modülü yakında eklenecek...</div>)}
         </div>
+
+        {/* YAPAY ZEKA GRAFİK ANALİZ MODALI */}
+        {showAnalysisModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-2xl flex flex-col shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b border-slate-700 bg-slate-800/50">
+                <h3 className="text-xl font-bold flex items-center gap-2 text-purple-400"><Sparkles className="w-6 h-6" /> {selectedAsset.symbol} Yapay Zeka Analizi</h3>
+                <button onClick={() => setShowAnalysisModal(false)} className="text-slate-400 hover:text-white transition"><X className="w-6 h-6" /></button>
+              </div>
+              <div className="p-6 overflow-y-auto max-h-[60vh] text-slate-300 leading-relaxed whitespace-pre-wrap">
+                {aiAnalysis ? aiAnalysis : (
+                  <div className="flex flex-col items-center justify-center py-10 opacity-70">
+                    <Sparkles className="w-10 h-10 text-purple-400 animate-pulse mb-4" />
+                    <p>Gemini AI grafiği inceliyor, lütfen bekleyin...</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* YAPAY ZEKA CHATBOT PENCERESİ */}
+        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+          {isChatOpen && (
+            <div className="bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl w-80 sm:w-96 h-[500px] mb-4 flex flex-col overflow-hidden">
+              <div className="bg-blue-600 p-4 flex items-center justify-between shadow-md">
+                <div className="flex items-center gap-2 text-white font-bold"><Bot className="w-6 h-6" /> Yatırım Asistanı</div>
+                <button onClick={() => setIsChatOpen(false)} className="text-white/80 hover:text-white transition"><X className="w-5 h-5" /></button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-900/50">
+                {chatMessages.map((msg, idx) => (
+                  <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`px-4 py-2 rounded-2xl max-w-[85%] text-sm ${msg.sender === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-slate-700 text-slate-100 rounded-bl-none border border-slate-600'}`}>
+                      {msg.text}
+                    </div>
+                  </div>
+                ))}
+                {isChatLoading && (
+                  <div className="flex justify-start"><div className="px-4 py-2 rounded-2xl bg-slate-700 text-slate-400 text-sm rounded-bl-none animate-pulse">Yazıyor...</div></div>
+                )}
+              </div>
+              
+              <div className="p-3 bg-slate-800 border-t border-slate-700 flex items-center gap-2">
+                <input type="text" value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendMessage()} placeholder="Bana bir şey sorun..." className="flex-1 bg-slate-900 text-sm border border-slate-700 rounded-full px-4 py-2.5 focus:outline-none focus:border-blue-500 transition" />
+                <button onClick={handleSendMessage} disabled={isChatLoading || !chatInput.trim()} className="bg-blue-600 p-2.5 rounded-full text-white hover:bg-blue-500 transition disabled:opacity-50"><Send className="w-4 h-4" /></button>
+              </div>
+            </div>
+          )}
+          
+          {/* Chatbot Açma Butonu */}
+          <button onClick={() => setIsChatOpen(!isChatOpen)} className="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-full shadow-lg transition transform hover:scale-105 flex items-center justify-center">
+            {isChatOpen ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
+          </button>
+        </div>
+
       </main>
     </div>
   )
