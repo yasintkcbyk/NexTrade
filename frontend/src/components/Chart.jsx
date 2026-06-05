@@ -1,49 +1,173 @@
 import { useEffect, useRef } from 'react';
-import { createChart, ColorType, CandlestickSeries } from 'lightweight-charts';
+import { createChart, CrosshairMode, LineStyle } from 'lightweight-charts';
 
-export default function Chart({ data }) {
-  const chartContainerRef = useRef();
+export default function Chart({ data, signals = [] }) {
+  const chartContainerRef = useRef(null);
+  const chartRef = useRef(null);
+  const candleSeriesRef = useRef(null);
+  const volumeSeriesRef = useRef(null);
 
   useEffect(() => {
-    if (!chartContainerRef.current) return;
+    if (!chartContainerRef.current || !data || data.length === 0) return;
 
-    // Grafiği oluştur ve koyu temamıza uygun renkleri ayarla
-    const chart = createChart(chartContainerRef.current, {
+    // Önceki chart'ı temizle
+    if (chartRef.current) {
+      chartRef.current.remove();
+      chartRef.current = null;
+    }
+
+    const container = chartContainerRef.current;
+    const height = container.clientHeight || 400;
+    const width  = container.clientWidth  || 800;
+
+    // Chart oluştur
+    const chart = createChart(container, {
+      width,
+      height,
       layout: {
-        background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: '#9ca3af', // text-gray-400
+        background: { color: 'transparent' },
+        textColor: '#8ba4c8',
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: 11,
       },
       grid: {
-        vertLines: { color: '#334155' }, // border-slate-700
-        horzLines: { color: '#334155' },
+        vertLines: { color: 'rgba(99,179,237,0.05)', style: LineStyle.Dashed },
+        horzLines: { color: 'rgba(99,179,237,0.05)', style: LineStyle.Dashed },
       },
-      width: chartContainerRef.current.clientWidth || 600, // Genişlik 0 ise 600px varsay (çökmeyi önler)
-      height: 400,
+      crosshair: {
+        mode: CrosshairMode.Normal,
+        vertLine: { color: 'rgba(0,212,255,0.4)', labelBackgroundColor: '#162040' },
+        horzLine: { color: 'rgba(0,212,255,0.4)', labelBackgroundColor: '#162040' },
+      },
+      rightPriceScale: {
+        borderColor: 'rgba(99,179,237,0.1)',
+        textColor: '#8ba4c8',
+      },
+      timeScale: {
+        borderColor: 'rgba(99,179,237,0.1)',
+        timeVisible: true,
+        secondsVisible: false,
+        tickMarkFormatter: (time) => {
+          const d = new Date(time * 1000);
+          return `${d.getDate()}/${d.getMonth() + 1}`;
+        },
+      },
+      handleScale: { mouseWheel: true, pinch: true },
+      handleScroll: { mouseWheel: true, pressedMouseMove: true },
     });
 
-    // Profesyonel Mum Grafiğine (Candlestick) geçiş yapıyoruz
-    const candlestickSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#26a69a',
-      downColor: '#ef5350',
-      borderVisible: false,
-      wickUpColor: '#26a69a',
-      wickDownColor: '#ef5350',
-    });
-    candlestickSeries.setData(data);
+    chartRef.current = chart;
 
-    const handleResize = () => {
-      if (chartContainerRef.current) {
-        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+    // Candlestick serisi
+    const candleSeries = chart.addCandlestickSeries({
+      upColor:          '#10b981',
+      downColor:        '#f43f5e',
+      borderUpColor:    '#10b981',
+      borderDownColor:  '#f43f5e',
+      wickUpColor:      '#10b981',
+      wickDownColor:    '#f43f5e',
+    });
+
+    // Mum verilerini normalize et
+    const formattedData = data
+      .filter(d => d.open && d.high && d.low && d.close)
+      .map(d => {
+        // Zaman UNIX timestamp olarak gelmeli (saniye)
+        let time = d.time;
+        if (typeof time === 'string') {
+          time = Math.floor(new Date(time).getTime() / 1000);
+        }
+        return {
+          time,
+          open:  parseFloat(d.open),
+          high:  parseFloat(d.high),
+          low:   parseFloat(d.low),
+          close: parseFloat(d.close),
+        };
+      })
+      .filter(d => !isNaN(d.time) && !isNaN(d.open))
+      .sort((a, b) => a.time - b.time);
+
+    // Duplicate time'ları filtrele
+    const seen = new Set();
+    const uniqueData = formattedData.filter(d => {
+      if (seen.has(d.time)) return false;
+      seen.add(d.time);
+      return true;
+    });
+
+    if (uniqueData.length > 0) {
+      candleSeries.setData(uniqueData);
+      candleSeriesRef.current = candleSeries;
+
+      // Volume histogramı (alt)
+      const volumeSeries = chart.addHistogramSeries({
+        color: '#4488ff',
+        priceFormat: { type: 'volume' },
+        priceScaleId: 'volume',
+        scaleMargins: { top: 0.85, bottom: 0 },
+      });
+
+      const volumeData = uniqueData.map(d => ({
+        time: d.time,
+        value: data.find(r => {
+          let rt = r.time;
+          if (typeof rt === 'string') rt = Math.floor(new Date(rt).getTime() / 1000);
+          return rt === d.time;
+        })?.volume || 0,
+        color: d.close >= d.open ? 'rgba(16,185,129,0.25)' : 'rgba(244,63,94,0.25)',
+      }));
+
+      volumeSeries.setData(volumeData);
+      volumeSeriesRef.current = volumeSeries;
+
+      // Sinyal işaretleyicileri (AL/SAT)
+      if (signals && signals.length > 0) {
+        const markers = signals
+          .map(s => {
+            let time = s.time;
+            if (typeof time === 'string') time = Math.floor(new Date(time).getTime() / 1000);
+            if (!seen.has(time)) return null;
+            return {
+              time,
+              position: s.position || 'belowBar',
+              color: s.color || '#4488ff',
+              shape: s.shape || 'arrowUp',
+              text: s.text || '',
+            };
+          })
+          .filter(Boolean)
+          .sort((a, b) => a.time - b.time);
+
+        if (markers.length > 0) {
+          candleSeries.setMarkers(markers);
+        }
       }
-    };
 
-    window.addEventListener('resize', handleResize);
+      chart.timeScale().fitContent();
+    }
+
+    // Responsive resize
+    const resizeObserver = new ResizeObserver(() => {
+      if (chartRef.current && container) {
+        chartRef.current.resize(container.clientWidth, container.clientHeight);
+      }
+    });
+    resizeObserver.observe(container);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      chart.remove();
+      resizeObserver.disconnect();
+      if (chartRef.current) {
+        chartRef.current.remove();
+        chartRef.current = null;
+      }
     };
-  }, [data]);
+  }, [data, signals]);
 
-  return <div ref={chartContainerRef} className="w-full h-[400px]" />;
+  return (
+    <div
+      ref={chartContainerRef}
+      style={{ width: '100%', height: '100%', minHeight: 0 }}
+    />
+  );
 }

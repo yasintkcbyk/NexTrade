@@ -60,11 +60,20 @@ def get_crypto_data(coin_id: str):
     except Exception as e:
         return {"error": str(e)}
 
-def get_crypto_history(coin_id: str):
+def get_crypto_history(coin_id: str, interval: str = '1D'):
     """
     Yahoo Finance (yfinance) üzerinden geçmiş mum verilerini çeker.
     Binance API erişim sorunları/kısıtlamalarını aşmak için yfinance kullanıyoruz.
     """
+    interval_map = {
+        "1D": {"period": "7d", "interval": "1d"},
+        "1W": {"period": "7d", "interval": "1d"},
+        "1M": {"period": "1mo", "interval": "1d"},
+        "3M": {"period": "3mo", "interval": "1d"},
+        "1Y": {"period": "1y", "interval": "1d"},
+    }
+    params = interval_map.get(interval, {"period": "1mo", "interval": "1d"})
+
     coin_map = {
         "bitcoin": "BTC-USD",
         "ethereum": "ETH-USD",
@@ -78,7 +87,7 @@ def get_crypto_history(coin_id: str):
     
     try:
         ticker = yf.Ticker(symbol)
-        hist = ticker.history(period="1mo", interval="1d")
+        hist = ticker.history(period=params["period"], interval=params["interval"])
         if hist.empty:
             raise ValueError(f"yfinance boş veri döndürdü ({symbol}).")
             

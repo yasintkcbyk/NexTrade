@@ -38,6 +38,7 @@ def get_stock_history(symbol: str, interval: str = '1d'):
         "1Y": {"period": "1y", "interval": "1d"},
         "3M": {"period": "3mo", "interval": "1d"},
         "1M": {"period": "1mo", "interval": "1h"},
+        "1W": {"period": "7d", "interval": "1d"},
         "1D": {"period": "5d", "interval": "15m"},
     }
     params = interval_map.get(interval, {"period": "1mo", "interval": "1d"})
