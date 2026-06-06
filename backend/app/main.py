@@ -15,10 +15,17 @@ app = FastAPI(
     version="2.0.0"
 )
 
+# İzin verilen frontend adresleri
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://nex-trade-gamma.vercel.app",
+]
+
 # Frontend (React) ile iletişim için CORS ayarları
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Production'da Vercel URL'inizi ekleyin
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
