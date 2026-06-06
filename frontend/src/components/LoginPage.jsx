@@ -161,7 +161,9 @@ export default function LoginPage({ onLogin }) {
             </div>
           </div>
 
-          {error && <div className="login-error">{error}</div>}
+          <div className="login-error-container" style={{ minHeight: error ? '24px' : '0', overflow: 'hidden' }}>
+            {error && <div className="login-error">{error}</div>}
+          </div>
 
           <button className="login-btn" type="submit" disabled={loading}>
             {loading ? (
@@ -180,9 +182,9 @@ export default function LoginPage({ onLogin }) {
 
         <div className="login-switch">
           {mode === 'login' ? (
-            <>Hesabın yok mu? <button onClick={() => { setMode('register'); setError(''); }}>Kayıt Ol</button></>
+            <span>Hesabın yok mu? <button onClick={() => { setMode('register'); setError(''); }}>Kayıt Ol</button></span>
           ) : (
-            <>Zaten hesabın var mı? <button onClick={() => { setMode('login'); setError(''); }}>Giriş Yap</button></>
+            <span>Zaten hesabın var mı? <button onClick={() => { setMode('login'); setError(''); }}>Giriş Yap</button></span>
           )}
         </div>
 
