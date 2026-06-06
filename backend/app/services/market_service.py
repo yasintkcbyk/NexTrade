@@ -10,6 +10,11 @@ CRYPTO_ASSETS = [
     {"id": "avalanche", "symbol": "AVAX", "name": "Avalanche", "type": "crypto", "high24h": 37.00, "low24h": 35.00, "change": -0.50},
     {"id": "dogecoin", "symbol": "DOGE", "name": "Dogecoin", "type": "crypto", "high24h": 0.13, "low24h": 0.10, "change": 12.40},
     {"id": "cardano", "symbol": "ADA", "name": "Cardano", "type": "crypto", "high24h": 0.48, "low24h": 0.44, "change": -2.10},
+    {"id": "binancecoin", "symbol": "BNB", "name": "BNB", "type": "crypto", "high24h": 610.0, "low24h": 590.0, "change": 1.20},
+    {"id": "polkadot", "symbol": "DOT", "name": "Polkadot", "type": "crypto", "high24h": 8.50, "low24h": 8.10, "change": -0.50},
+    {"id": "chainlink", "symbol": "LINK", "name": "Chainlink", "type": "crypto", "high24h": 18.20, "low24h": 17.40, "change": 2.10},
+    {"id": "matic-network", "symbol": "MATIC", "name": "Polygon", "type": "crypto", "high24h": 0.85, "low24h": 0.80, "change": -1.10},
+    {"id": "tron", "symbol": "TRX", "name": "TRON", "type": "crypto", "high24h": 0.12, "low24h": 0.11, "change": 0.50},
 ]
 
 STOCK_ASSETS = [
@@ -20,6 +25,12 @@ STOCK_ASSETS = [
     {"id": "AMZN", "symbol": "AMZN", "name": "Amazon.com", "type": "stock", "high24h": 188, "low24h": 182, "change": -1.50},
     {"id": "NVDA", "symbol": "NVDA", "name": "NVIDIA", "type": "stock", "high24h": 930, "low24h": 900, "change": 3.50},
     {"id": "THYAO.IS", "symbol": "THYAO.IS", "name": "Türk Hava Yolları", "type": "stock", "high24h": 310, "low24h": 295, "change": 4.20},
+    {"id": "META", "symbol": "META", "name": "Meta Platforms", "type": "stock", "high24h": 500, "low24h": 490, "change": 1.50},
+    {"id": "NFLX", "symbol": "NFLX", "name": "Netflix", "type": "stock", "high24h": 610, "low24h": 600, "change": -0.80},
+    {"id": "AMD", "symbol": "AMD", "name": "AMD", "type": "stock", "high24h": 170, "low24h": 160, "change": 2.50},
+    {"id": "KCHOL.IS", "symbol": "KCHOL.IS", "name": "Koç Holding", "type": "stock", "high24h": 220, "low24h": 210, "change": 1.80},
+    {"id": "ASELS.IS", "symbol": "ASELS.IS", "name": "Aselsan", "type": "stock", "high24h": 65, "low24h": 62, "change": -1.20},
+    {"id": "TUPRS.IS", "symbol": "TUPRS.IS", "name": "Tüpraş", "type": "stock", "high24h": 180, "low24h": 175, "change": 0.90},
 ]
 
 

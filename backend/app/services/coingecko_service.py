@@ -20,7 +20,12 @@ def get_crypto_data(coin_id: str):
         "ripple": "XRP",
         "cardano": "ADA",
         "avalanche": "AVAX",
-        "dogecoin": "DOGE"
+        "dogecoin": "DOGE",
+        "binancecoin": "BNB",
+        "polkadot": "DOT",
+        "chainlink": "LINK",
+        "matic-network": "MATIC",
+        "tron": "TRX"
     }
     
     symbol = coin_map.get(coin_id.lower(), coin_id.upper())
@@ -34,31 +39,47 @@ def get_crypto_data(coin_id: str):
         # BtcTurk üzerinden USDT (Dolar) fiyatını çekiyoruz
         url_usd = f"https://api.btcturk.com/api/v2/ticker?pairSymbol={symbol}USDT"
         res_usd = session.get(url_usd)
-        data_usd = res_usd.json()
-        
-        if not data_usd.get("success") or not data_usd.get("data"):
-            return {"error": f"Kripto para bulunamadı. Lütfen geçerli bir sembol girin (örn: BTC veya ETH)."}
-                
-        price_usd = float(data_usd["data"][0]["last"])
-        
-        price_try = 0
-        try:
-            # BtcTurk üzerinden doğrudan TRY (Türk Lirası) fiyatını çekiyoruz
-            url_try = f"https://api.btcturk.com/api/v2/ticker?pairSymbol={symbol}TRY"
-            res_try = session.get(url_try)
-            data_try = res_try.json()
-            if data_try.get("success") and data_try.get("data"):
-                price_try = float(data_try["data"][0]["last"])
-        except Exception:
-            pass
+        if res_usd.status_code == 200:
+            data_usd = res_usd.json()
             
-        return {
-            "symbol": symbol,
-            "price_usd": round(price_usd, 2),
-            "price_try": round(price_try, 2)
-        }
-    except Exception as e:
-        return {"error": str(e)}
+            if data_usd.get("success") and data_usd.get("data"):
+                price_usd = float(data_usd["data"][0]["last"])
+                
+                price_try = 0
+                try:
+                    # BtcTurk üzerinden doğrudan TRY (Türk Lirası) fiyatını çekiyoruz
+                    url_try = f"https://api.btcturk.com/api/v2/ticker?pairSymbol={symbol}TRY"
+                    res_try = session.get(url_try)
+                    if res_try.status_code == 200:
+                        data_try = res_try.json()
+                        if data_try.get("success") and data_try.get("data"):
+                            price_try = float(data_try["data"][0]["last"])
+                except Exception:
+                    pass
+                    
+                return {
+                    "symbol": symbol,
+                    "price_usd": round(price_usd, 2),
+                    "price_try": round(price_try, 2)
+                }
+    except Exception:
+        pass
+
+    # BtcTurk'te desteklenmeyen coinler (BNB vb.) için yfinance Fallback (Yedek) Planı
+    try:
+        ticker = yf.Ticker(f"{symbol}-USD")
+        hist = ticker.history(period="1d")
+        if not hist.empty:
+            price_usd = float(hist['Close'].iloc[-1])
+            return {
+                "symbol": symbol,
+                "price_usd": round(price_usd, 2),
+                "price_try": 0
+            }
+    except Exception:
+        pass
+
+    return {"error": f"Kripto para bulunamadı ({symbol})."}
 
 def get_crypto_history(coin_id: str, interval: str = '1D'):
     """
@@ -81,7 +102,12 @@ def get_crypto_history(coin_id: str, interval: str = '1D'):
         "ripple": "XRP-USD",
         "cardano": "ADA-USD",
         "avalanche": "AVAX-USD",
-        "dogecoin": "DOGE-USD"
+        "dogecoin": "DOGE-USD",
+        "binancecoin": "BNB-USD",
+        "polkadot": "DOT-USD",
+        "chainlink": "LINK-USD",
+        "matic-network": "MATIC-USD",
+        "tron": "TRX-USD"
     }
     symbol = coin_map.get(coin_id.lower(), f"{coin_id.upper()}-USD")
     
@@ -123,7 +149,8 @@ def get_crypto_history(coin_id: str, interval: str = '1D'):
 def get_crypto_signals(coin_id: str):
     coin_map = {
         "bitcoin": "BTC-USD", "ethereum": "ETH-USD", "solana": "SOL-USD",
-        "ripple": "XRP-USD", "cardano": "ADA-USD", "avalanche": "AVAX-USD", "dogecoin": "DOGE-USD"
+        "ripple": "XRP-USD", "cardano": "ADA-USD", "avalanche": "AVAX-USD", "dogecoin": "DOGE-USD",
+        "binancecoin": "BNB-USD", "polkadot": "DOT-USD", "chainlink": "LINK-USD", "matic-network": "MATIC-USD", "tron": "TRX-USD"
     }
     symbol = coin_map.get(coin_id.lower(), f"{coin_id.upper()}-USD")
     try:
@@ -147,7 +174,8 @@ def get_crypto_signals(coin_id: str):
 def get_crypto_news(coin_id: str):
     coin_map = {
         "bitcoin": "BTC-USD", "ethereum": "ETH-USD", "solana": "SOL-USD",
-        "ripple": "XRP-USD", "cardano": "ADA-USD", "avalanche": "AVAX-USD", "dogecoin": "DOGE-USD"
+        "ripple": "XRP-USD", "cardano": "ADA-USD", "avalanche": "AVAX-USD", "dogecoin": "DOGE-USD",
+        "binancecoin": "BNB-USD", "polkadot": "DOT-USD", "chainlink": "LINK-USD", "matic-network": "MATIC-USD", "tron": "TRX-USD"
     }
     symbol = coin_map.get(coin_id.lower(), f"{coin_id.upper()}-USD")
     try:
@@ -155,11 +183,17 @@ def get_crypto_news(coin_id: str):
         news = ticker.news
         formatted_news = []
         for n in news[:15]:
+            content = n.get("content", {}) if isinstance(n.get("content"), dict) else {}
+            
+            title = n.get("title") or content.get("title", "")
+            publisher = n.get("publisher") or content.get("provider", {}).get("displayName", "")
+            link = n.get("link") or content.get("canonicalUrl", {}).get("url", "")
+            timestamp = n.get("providerPublishTime") or content.get("pubDate", 0)
             formatted_news.append({
-                "title": n.get("title", ""),
-                "publisher": n.get("publisher", ""),
-                "link": n.get("link", ""),
-                "timestamp": n.get("providerPublishTime", 0)
+                "title": title,
+                "publisher": publisher,
+                "link": link,
+                "timestamp": timestamp
             })
         return formatted_news
     except Exception:

@@ -4,10 +4,11 @@ from app.services.yfinance_service import get_stock_data
 from app.services.telegram_service import send_telegram_alert
 from app.database import SessionLocal
 from app.models import Alert
+from app.services.market_service import CRYPTO_ASSETS
 
 def fetch_price_sync(symbol: str):
     """Fiyatı senkron olarak çeker, ayrı thread'de çalıştırılmak üzere ayrıldı."""
-    crypto_symbols = ["BTC", "ETH", "SOL", "XRP", "ADA", "AVAX", "DOGE"]
+    crypto_symbols = [c["symbol"].upper() for c in CRYPTO_ASSETS]
     if symbol.upper() in crypto_symbols:
         data = get_crypto_data(symbol)
         return data.get("price_usd") if "error" not in data else None

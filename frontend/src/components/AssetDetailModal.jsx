@@ -4,13 +4,24 @@ import { X, ExternalLink, Globe, Share2, Code2, TrendingUp, TrendingDown, Info, 
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
-function formatNumber(num) {
+const CURRENCIES = {
+  USD: { symbol: '$' },
+  TRY: { symbol: '₺' },
+  GBP: { symbol: '£' },
+  KZT: { symbol: '₸' },
+  RUB: { symbol: '₽' }
+};
+
+function formatNumber(num, currency = 'USD', rates = {}) {
   if (!num || num === 0) return '—';
-  if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
-  if (num >= 1e9)  return `$${(num / 1e9).toFixed(2)}B`;
-  if (num >= 1e6)  return `$${(num / 1e6).toFixed(2)}M`;
-  if (num >= 1e3)  return `$${(num / 1e3).toFixed(2)}K`;
-  return `$${num.toLocaleString()}`;
+  const rate = rates[currency] || 1;
+  const val = num * rate;
+  const sym = CURRENCIES[currency]?.symbol || '$';
+  if (val >= 1e12) return `${sym}${(val / 1e12).toFixed(2)}T`;
+  if (val >= 1e9)  return `${sym}${(val / 1e9).toFixed(2)}B`;
+  if (val >= 1e6)  return `${sym}${(val / 1e6).toFixed(2)}M`;
+  if (val >= 1e3)  return `${sym}${(val / 1e3).toFixed(2)}K`;
+  return `${sym}${val.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
 
 function formatSupply(num) {
@@ -21,13 +32,17 @@ function formatSupply(num) {
   return num.toLocaleString();
 }
 
-function CryptoInfo({ info }) {
+function CryptoInfo({ info, currency, rates, t }) {
+  const sym = CURRENCIES[currency]?.symbol || '$';
+  const rate = rates[currency] || 1;
+  const ath = info.ath_usd ? (info.ath_usd * rate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : '—';
+
   return (
     <div className="animate-fadeIn">
       {/* Description */}
       {info.description && (
         <div className="description-box" style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-dim)', marginBottom: 8 }}>Hakkında</div>
+          <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-dim)', marginBottom: 8 }}>{t('about')}</div>
           {info.description}
         </div>
       )}
@@ -35,52 +50,52 @@ function CryptoInfo({ info }) {
       {/* Key Stats */}
       <div className="info-grid">
         <div className="info-card">
-          <div className="info-label">Piyasa Sırası</div>
+          <div className="info-label">{t('marketRank')}</div>
           <div className="info-value accent">#{info.market_cap_rank || '—'}</div>
         </div>
         <div className="info-card">
-          <div className="info-label">Piyasa Değeri</div>
-          <div className="info-value mono">{formatNumber(info.market_cap_usd)}</div>
+          <div className="info-label">{t('marketCap')}</div>
+          <div className="info-value mono">{formatNumber(info.market_cap_usd, currency, rates)}</div>
         </div>
         <div className="info-card">
-          <div className="info-label">İşlem Hacmi (24s)</div>
-          <div className="info-value mono">{formatNumber(info.total_volume_usd)}</div>
+          <div className="info-label">{t('volume24h')}</div>
+          <div className="info-value mono">{formatNumber(info.total_volume_usd, currency, rates)}</div>
         </div>
         <div className="info-card">
-          <div className="info-label">Tüm Zamanların En Yükseği</div>
+          <div className="info-label">{t('ath')}</div>
           <div className="info-value mono" style={{ color: 'var(--accent-green)' }}>
-            ${info.ath_usd ? info.ath_usd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : '—'}
+            {sym}{ath}
           </div>
         </div>
         <div className="info-card">
-          <div className="info-label">Dolaşımdaki Arz</div>
+          <div className="info-label">{t('circulatingSupply')}</div>
           <div className="info-value mono">{formatSupply(info.circulating_supply)}</div>
         </div>
         <div className="info-card">
-          <div className="info-label">Maksimum Arz</div>
-          <div className="info-value mono">{info.max_supply ? formatSupply(info.max_supply) : '∞ Sınırsız'}</div>
+          <div className="info-label">{t('maxSupply')}</div>
+          <div className="info-value mono">{info.max_supply ? formatSupply(info.max_supply) : t('infinite')}</div>
         </div>
         <div className="info-card">
-          <div className="info-label">7 Günlük Değişim</div>
+          <div className="info-label">{t('change7d')}</div>
           <div className={`info-value ${(info.price_change_7d || 0) >= 0 ? 'positive' : 'negative'}`}>
             {(info.price_change_7d || 0) >= 0 ? '+' : ''}{(info.price_change_7d || 0).toFixed(2)}%
           </div>
         </div>
         <div className="info-card">
-          <div className="info-label">30 Günlük Değişim</div>
+          <div className="info-label">{t('change30d')}</div>
           <div className={`info-value ${(info.price_change_30d || 0) >= 0 ? 'positive' : 'negative'}`}>
             {(info.price_change_30d || 0) >= 0 ? '+' : ''}{(info.price_change_30d || 0).toFixed(2)}%
           </div>
         </div>
         {info.genesis_date && (
           <div className="info-card">
-            <div className="info-label">İlk Blok Tarihi</div>
+            <div className="info-label">{t('genesisDate')}</div>
             <div className="info-value">{new Date(info.genesis_date).toLocaleDateString('tr-TR')}</div>
           </div>
         )}
         {info.hashing_algorithm && (
           <div className="info-card">
-            <div className="info-label">Konsensüs Mekanizması</div>
+            <div className="info-label">{t('consensus')}</div>
             <div className="info-value" style={{ fontSize: 12 }}>{info.hashing_algorithm}</div>
           </div>
         )}
@@ -89,7 +104,7 @@ function CryptoInfo({ info }) {
       {/* Categories */}
       {info.categories && info.categories.length > 0 && (
         <div style={{ marginTop: 16 }}>
-          <div className="info-label" style={{ marginBottom: 8 }}>Kategoriler</div>
+          <div className="info-label" style={{ marginBottom: 8 }}>{t('categories')}</div>
           <div className="tag-list">
             {info.categories.map((cat, i) => <span key={i} className="tag">{cat}</span>)}
           </div>
@@ -127,14 +142,17 @@ function CryptoInfo({ info }) {
       {info.source === 'static_fallback' && (
         <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-dim)', background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.1)', padding: '8px 12px', borderRadius: 'var(--radius-md)' }}>
           <AlertCircle size={12} style={{ color: 'var(--accent-amber)' }} />
-          Canlı veri alınamadı, statik bilgiler gösteriliyor.
+          {t('staticDataWarning')}
         </div>
       )}
     </div>
   );
 }
 
-function StockInfo({ info }) {
+function StockInfo({ info, currency, rates, t }) {
+  const sym = CURRENCIES[currency]?.symbol || '$';
+  const rate = rates[currency] || 1;
+
   return (
     <div className="animate-fadeIn">
       {info.description && (
@@ -143,57 +161,57 @@ function StockInfo({ info }) {
 
       <div className="info-grid">
         <div className="info-card">
-          <div className="info-label">Sektör</div>
+          <div className="info-label">{t('sector')}</div>
           <div className="info-value" style={{ fontSize: 13 }}>{info.sector || '—'}</div>
         </div>
         <div className="info-card">
-          <div className="info-label">Endüstri</div>
+          <div className="info-label">{t('industry')}</div>
           <div className="info-value" style={{ fontSize: 12 }}>{info.industry || '—'}</div>
         </div>
         <div className="info-card">
-          <div className="info-label">Piyasa Değeri</div>
-          <div className="info-value mono">{formatNumber(info.market_cap_usd)}</div>
+          <div className="info-label">{t('marketCap')}</div>
+          <div className="info-value mono">{formatNumber(info.market_cap_usd, currency, rates)}</div>
         </div>
         <div className="info-card">
-          <div className="info-label">F/K Oranı (PE)</div>
+          <div className="info-label">{t('peRatio')}</div>
           <div className="info-value mono">{info.pe_ratio ? info.pe_ratio.toFixed(2) : '—'}</div>
         </div>
         <div className="info-card">
-          <div className="info-label">Hisse Başı Kâr (EPS)</div>
-          <div className="info-value mono">${info.eps ? info.eps.toFixed(2) : '—'}</div>
+          <div className="info-label">{t('eps')}</div>
+          <div className="info-value mono">{sym}{info.eps ? (info.eps * rate).toFixed(2) : '—'}</div>
         </div>
         <div className="info-card">
-          <div className="info-label">Temettü Verimi</div>
+          <div className="info-label">{t('dividendYield')}</div>
           <div className="info-value" style={{ color: 'var(--accent-green)' }}>
             {info.dividend_yield ? `%${info.dividend_yield.toFixed(2)}` : '—'}
           </div>
         </div>
         <div className="info-card">
-          <div className="info-label">52 Haftalık En Yüksek</div>
+          <div className="info-label">{t('high52w')}</div>
           <div className="info-value mono" style={{ color: 'var(--accent-green)' }}>
-            ${info['52w_high'] ? info['52w_high'].toLocaleString() : '—'}
+            {sym}{info['52w_high'] ? (info['52w_high'] * rate).toLocaleString(undefined, { maximumFractionDigits: 2 }) : '—'}
           </div>
         </div>
         <div className="info-card">
-          <div className="info-label">52 Haftalık En Düşük</div>
+          <div className="info-label">{t('low52w')}</div>
           <div className="info-value mono" style={{ color: 'var(--accent-red)' }}>
-            ${info['52w_low'] ? info['52w_low'].toLocaleString() : '—'}
+            {sym}{info['52w_low'] ? (info['52w_low'] * rate).toLocaleString(undefined, { maximumFractionDigits: 2 }) : '—'}
           </div>
         </div>
         <div className="info-card">
-          <div className="info-label">Çalışan Sayısı</div>
+          <div className="info-label">{t('employees')}</div>
           <div className="info-value mono">{info.employees ? info.employees.toLocaleString() : '—'}</div>
         </div>
         <div className="info-card">
-          <div className="info-label">Beta</div>
+          <div className="info-label">{t('beta')}</div>
           <div className="info-value mono">{info.beta ? info.beta.toFixed(2) : '—'}</div>
         </div>
         <div className="info-card">
-          <div className="info-label">Gelir</div>
-          <div className="info-value mono">{formatNumber(info.revenue)}</div>
+          <div className="info-label">{t('revenue')}</div>
+          <div className="info-value mono">{formatNumber(info.revenue, currency, rates)}</div>
         </div>
         <div className="info-card">
-          <div className="info-label">Kâr Marjı</div>
+          <div className="info-label">{t('profitMargin')}</div>
           <div className="info-value" style={{ color: (info.profit_margin || 0) > 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>
             {info.profit_margin ? `%${info.profit_margin.toFixed(2)}` : '—'}
           </div>
@@ -212,7 +230,7 @@ function StockInfo({ info }) {
   );
 }
 
-export default function AssetDetailModal({ asset, onClose, onNavigateToChart, onSummarizeNews }) {
+export default function AssetDetailModal({ asset, onClose, onNavigateToChart, onSummarizeNews, currency, rates, t }) {
   const [activeTab, setActiveTab] = useState('info');
   const [info, setInfo] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -279,7 +297,7 @@ export default function AssetDetailModal({ asset, onClose, onNavigateToChart, on
               <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '-0.02em' }}>{asset.name}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
                 <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{asset.symbol}</span>
-                <span className={`badge ${isCrypto ? 'purple' : 'blue'}`}>{isCrypto ? 'Kripto' : 'Hisse'}</span>
+                <span className={`badge ${isCrypto ? 'purple' : 'blue'}`}>{isCrypto ? t('crypto') : t('stock')}</span>
                 <span className={`badge ${(asset.change || 0) >= 0 ? 'green' : 'red'}`}>
                   {(asset.change || 0) >= 0 ? <TrendingUp size={9} /> : <TrendingDown size={9} />}
                   {(asset.change || 0) >= 0 ? '+' : ''}{(asset.change || 0).toFixed(2)}%
@@ -290,7 +308,7 @@ export default function AssetDetailModal({ asset, onClose, onNavigateToChart, on
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'JetBrains Mono, monospace', color: 'var(--text-primary)' }}>
-                ${(asset.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                {CURRENCIES[currency]?.symbol || '$'}{((asset.price || 0) * (rates[currency] || 1)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
               </div>
             </div>
             <button className="icon-btn" onClick={onClose}><X size={15} /></button>
@@ -300,8 +318,8 @@ export default function AssetDetailModal({ asset, onClose, onNavigateToChart, on
         {/* Tabs */}
         <div className="detail-tabs">
           {[
-            { id: 'info', label: 'Genel Bilgi', icon: <Info size={13} /> },
-            { id: 'news', label: 'Haberler', icon: <Newspaper size={13} /> },
+            { id: 'info', label: t('generalInfo'), icon: <Info size={13} /> },
+            { id: 'news', label: t('news'), icon: <Newspaper size={13} /> },
           ].map(tab => (
             <button key={tab.id} className={`detail-tab ${activeTab === tab.id ? 'active' : ''}`} onClick={() => setActiveTab(tab.id)}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center' }}>
@@ -317,15 +335,15 @@ export default function AssetDetailModal({ asset, onClose, onNavigateToChart, on
             loading ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 60, gap: 14, color: 'var(--text-muted)' }}>
                 <div className="spinner" />
-                <p style={{ fontSize: 13 }}>Varlık bilgileri getiriliyor...</p>
+                <p style={{ fontSize: 13 }}>{t('loadingInfo')}</p>
               </div>
             ) : info && !info.error ? (
-              isCrypto ? <CryptoInfo info={info} /> : <StockInfo info={info} />
+              isCrypto ? <CryptoInfo info={info} currency={currency} rates={rates} t={t} /> : <StockInfo info={info} currency={currency} rates={rates} t={t} />
             ) : (
               <div className="empty-state">
                 <AlertCircle size={40} className="empty-state-icon" />
-                <div className="empty-state-title">Bilgi alınamadı</div>
-                <div className="empty-state-desc">Sunucu bağlantısını kontrol edin.</div>
+                <div className="empty-state-title">{t('infoFetchFailed')}</div>
+                <div className="empty-state-desc">{t('checkServer')}</div>
               </div>
             )
           )}
@@ -349,7 +367,7 @@ export default function AssetDetailModal({ asset, onClose, onNavigateToChart, on
                       {news.title}
                     </a>
                     <button className="news-ai-btn" onClick={() => onSummarizeNews && onSummarizeNews(news.title)}>
-                      <Sparkles size={10} /> AI Yorumla
+                      <Sparkles size={10} /> {t('aiAnalyze')}
                     </button>
                   </div>
                 ))}
@@ -357,7 +375,7 @@ export default function AssetDetailModal({ asset, onClose, onNavigateToChart, on
             ) : (
               <div className="empty-state">
                 <Newspaper size={40} className="empty-state-icon" />
-                <div className="empty-state-title">{asset.symbol} için haber bulunamadı</div>
+                <div className="empty-state-title">{asset.symbol} {t('noNewsForAsset')}</div>
               </div>
             )
           )}

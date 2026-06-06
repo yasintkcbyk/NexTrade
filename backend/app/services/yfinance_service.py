@@ -104,11 +104,17 @@ def get_stock_news(symbol: str):
         news = ticker.news
         formatted_news = []
         for n in news[:15]:  # Son 15 haberi al
+            content = n.get("content", {}) if isinstance(n.get("content"), dict) else {}
+            
+            title = n.get("title") or content.get("title", "")
+            publisher = n.get("publisher") or content.get("provider", {}).get("displayName", "")
+            link = n.get("link") or content.get("canonicalUrl", {}).get("url", "")
+            timestamp = n.get("providerPublishTime") or content.get("pubDate", 0)
             formatted_news.append({
-                "title": n.get("title", ""),
-                "publisher": n.get("publisher", ""),
-                "link": n.get("link", ""),
-                "timestamp": n.get("providerPublishTime", 0)
+                "title": title,
+                "publisher": publisher,
+                "link": link,
+                "timestamp": timestamp
             })
         return formatted_news
     except Exception as e:
@@ -121,11 +127,17 @@ def get_general_news():
         news = ticker.news
         formatted_news = []
         for n in news[:20]:  # Son 20 genel haberi al
+            content = n.get("content", {}) if isinstance(n.get("content"), dict) else {}
+            
+            title = n.get("title") or content.get("title", "")
+            publisher = n.get("publisher") or content.get("provider", {}).get("displayName", "")
+            link = n.get("link") or content.get("canonicalUrl", {}).get("url", "")
+            timestamp = n.get("providerPublishTime") or content.get("pubDate", 0)
             formatted_news.append({
-                "title": n.get("title", ""),
-                "publisher": n.get("publisher", ""),
-                "link": n.get("link", ""),
-                "timestamp": n.get("providerPublishTime", 0)
+                "title": title,
+                "publisher": publisher,
+                "link": link,
+                "timestamp": timestamp
             })
         return formatted_news
     except Exception:

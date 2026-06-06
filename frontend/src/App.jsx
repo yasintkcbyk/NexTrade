@@ -21,6 +21,11 @@ const FALLBACK_MARKET = [
   { id: 'avalanche', symbol: 'AVAX',     name: 'Avalanche',        price: 35.80,    change: -0.50, high24h: 37.00, low24h: 35.00, type: 'crypto' },
   { id: 'dogecoin',  symbol: 'DOGE',     name: 'Dogecoin',         price: 0.12,     change: 12.40, high24h: 0.13,  low24h: 0.10,  type: 'crypto' },
   { id: 'cardano',   symbol: 'ADA',      name: 'Cardano',          price: 0.45,     change: -2.1,  high24h: 0.48,  low24h: 0.44,  type: 'crypto' },
+  { id: 'binancecoin', symbol: 'BNB',    name: 'BNB',              price: 600.50,   change: 1.20,  high24h: 610.0, low24h: 590.0, type: 'crypto' },
+  { id: 'polkadot',  symbol: 'DOT',      name: 'Polkadot',         price: 8.20,     change: -0.50, high24h: 8.50,  low24h: 8.10,  type: 'crypto' },
+  { id: 'chainlink', symbol: 'LINK',     name: 'Chainlink',        price: 17.80,    change: 2.10,  high24h: 18.20, low24h: 17.40, type: 'crypto' },
+  { id: 'matic-network', symbol: 'MATIC',name: 'Polygon',          price: 0.82,     change: -1.10, high24h: 0.85,  low24h: 0.80,  type: 'crypto' },
+  { id: 'tron',      symbol: 'TRX',      name: 'TRON',             price: 0.115,    change: 0.50,  high24h: 0.12,  low24h: 0.11,  type: 'crypto' },
   { id: 'AAPL',      symbol: 'AAPL',     name: 'Apple Inc.',       price: 175.50,   change: 1.15,  high24h: 178,   low24h: 174,   type: 'stock' },
   { id: 'TSLA',      symbol: 'TSLA',     name: 'Tesla',            price: 195.20,   change: -3.45, high24h: 200,   low24h: 190,   type: 'stock' },
   { id: 'MSFT',      symbol: 'MSFT',     name: 'Microsoft',        price: 420.10,   change: 0.85,  high24h: 425,   low24h: 415,   type: 'stock' },
@@ -28,28 +33,137 @@ const FALLBACK_MARKET = [
   { id: 'AMZN',      symbol: 'AMZN',     name: 'Amazon.com',       price: 184.30,   change: -1.5,  high24h: 188,   low24h: 182,   type: 'stock' },
   { id: 'NVDA',      symbol: 'NVDA',     name: 'NVIDIA',           price: 924.70,   change: 3.5,   high24h: 930,   low24h: 900,   type: 'stock' },
   { id: 'THYAO.IS',  symbol: 'THYAO',    name: 'Türk Hava Yolları',price: 305.50,   change: 4.20,  high24h: 310,   low24h: 295,   type: 'stock' },
+  { id: 'META',      symbol: 'META',     name: 'Meta Platforms',   price: 495.30,   change: 1.50,  high24h: 500,   low24h: 490,   type: 'stock' },
+  { id: 'NFLX',      symbol: 'NFLX',     name: 'Netflix',          price: 605.10,   change: -0.80, high24h: 610,   low24h: 600,   type: 'stock' },
+  { id: 'AMD',       symbol: 'AMD',      name: 'AMD',              price: 165.40,   change: 2.50,  high24h: 170,   low24h: 160,   type: 'stock' },
+  { id: 'KCHOL.IS',  symbol: 'KCHOL',    name: 'Koç Holding',      price: 215.50,   change: 1.80,  high24h: 220,   low24h: 210,   type: 'stock' },
+  { id: 'ASELS.IS',  symbol: 'ASELS',    name: 'Aselsan',          price: 63.40,    change: -1.20, high24h: 65,    low24h: 62,    type: 'stock' },
+  { id: 'TUPRS.IS',  symbol: 'TUPRS',    name: 'Tüpraş',           price: 177.20,   change: 0.90,  high24h: 180,   low24h: 175,   type: 'stock' },
 ];
 
-const AI_SUGGESTIONS = [
-  'Bitcoin ne olacak?',
-  'Portföy önerisi ver',
-  'RSI nedir?',
-  'Altcoin sezonu başlıyor mu?',
-  'Güvenli liman nedir?',
-  'NVDA hissesi analiz et',
-];
+const CURRENCIES = {
+  USD: { symbol: '$', label: 'USD', locale: 'en-US' },
+  TRY: { symbol: '₺', label: 'TRY', locale: 'tr-TR' },
+  GBP: { symbol: '£', label: 'GBP', locale: 'en-GB' },
+  KZT: { symbol: '₸', label: 'KZT', locale: 'kk-KZ' },
+  RUB: { symbol: '₽', label: 'RUB', locale: 'ru-RU' }
+};
 
-function formatPrice(price) {
+const LANGUAGES = {
+  TR: { label: 'Türkçe', flag: '🇹🇷' },
+  EN: { label: 'English', flag: '🇬🇧' },
+  DE: { label: 'Deutsch', flag: '🇩🇪' },
+  RU: { label: 'Русский', flag: '🇷🇺' }
+};
+
+const TRANSLATIONS = {
+  TR: {
+    markets: 'Piyasalar', news: 'Haberler', alerts: 'Alarmlar', mainMenu: 'Ana Menü', logout: 'Çıkış Yap',
+    marketView: 'Piyasa Görünümü', marketNews: 'Piyasa Bülteni', priceAlerts: 'Fiyat Alarmları',
+    search: 'Varlık ara...', crypto: 'Kripto', stock: 'Hisse', all: 'Tümü', favorites: 'Favoriler',
+    asset: 'Varlık', price: 'Fiyat', high: 'Yük.', low: 'Düş.', change: '%24s', loading: 'Yükleniyor...', noResult: 'Sonuç bulunamadı',
+    detail: 'Detay', high24h: '24s Y', low24h: '24s D', buySellSignals: 'Al/Sat Sinyalleri', aiAnalyze: 'AI Yorumla',
+    chartLoading: 'Grafik verileri çekiliyor...', chartError: 'grafiği yüklenemedi', backendError: 'Backend sunucunun çalıştığından emin olun',
+    aiAnalyzing: 'AI grafiği analiz ediyor, lütfen bekleyin...', globalMarketNews: 'Küresel Piyasa Bülteni', searchNews: 'Haberlerde ara...',
+    macro: 'Makro', refresh: 'Yenile', noNews: 'Haber bulunamadı', tryDifferentCategory: 'Farklı bir kategori veya arama terimi deneyin.',
+    source: 'Kaynak', newsCount: 'haber', setPriceAlert: 'Fiyat Alarmı Kur', telegramConnected: 'Bağlı ✓', telegramNotConnected: 'Bağlı Değil',
+    alertsAutoForwarded: 'Alarmlar otomatik iletilecek', checkEnv: "Backend .env'yi kontrol edin", condition: 'Koşul', priceGoesUp: 'Fiyat yukarı geçerse',
+    priceGoesDown: 'Fiyat aşağı düşerse', targetPrice: 'Hedef Fiyat', saveAlert: 'Alarmı Kaydet', telegramTestMsg: 'Telegram Test Mesajı',
+    activeAlerts: 'Aktif Alarmlar', noAlertsYet: 'Henüz alarm kurulmadı', useLeftPanelToSetAlert: 'Sol paneli kullanarak yeni bir fiyat alarmı kurun.',
+    ifRises: 'Yükselirse', ifFalls: 'Düşerse', current: 'güncel', aiAssistant: 'AI Yatırım Asistanı', askSomething: 'Bir şey sorun...',
+    aiGreeting: '👋 Merhaba! Ben nextTrade AI yatırım asistanıyım.\n\nKripto ve hisse senetleri hakkında soru sorabilir, analiz isteyebilir veya piyasa hakkında konuşabiliriz.',
+    aiSuggestions: ['Bitcoin ne olacak?', 'Portföy önerisi ver', 'RSI nedir?', 'Altcoin sezonu başlıyor mu?', 'Güvenli liman nedir?', 'NVDA hissesi analiz et'],
+    about: 'Hakkında', marketRank: 'Piyasa Sırası', marketCap: 'Piyasa Değeri', volume24h: 'İşlem Hacmi (24s)', ath: 'Tüm Zamanların En Yükseği',
+    circulatingSupply: 'Dolaşımdaki Arz', maxSupply: 'Maksimum Arz', infinite: '∞ Sınırsız', change7d: '7 Günlük Değişim', change30d: '30 Günlük Değişim',
+    genesisDate: 'İlk Blok Tarihi', consensus: 'Konsensüs Mekanizması', categories: 'Kategoriler', staticDataWarning: 'Canlı veri alınamadı, statik bilgiler gösteriliyor.',
+    sector: 'Sektör', industry: 'Endüstri', peRatio: 'F/K Oranı (PE)', eps: 'Hisse Başı Kâr (EPS)', dividendYield: 'Temettü Verimi',
+    high52w: '52 Haftalık En Yüksek', low52w: '52 Haftalık En Düşük', employees: 'Çalışan Sayısı', beta: 'Beta', revenue: 'Gelir', profitMargin: 'Kâr Marjı',
+    generalInfo: 'Genel Bilgi', loadingInfo: 'Varlık bilgileri getiriliyor...', infoFetchFailed: 'Bilgi alınamadı', checkServer: 'Sunucu bağlantısını kontrol edin.', noNewsForAsset: 'için haber bulunamadı'
+  },
+  EN: {
+    markets: 'Markets', news: 'News', alerts: 'Alerts', mainMenu: 'Main Menu', logout: 'Logout',
+    marketView: 'Market Overview', marketNews: 'Market News', priceAlerts: 'Price Alerts',
+    search: 'Search assets...', crypto: 'Crypto', stock: 'Stock', all: 'All', favorites: 'Favorites',
+    asset: 'Asset', price: 'Price', high: 'High', low: 'Low', change: '24h%', loading: 'Loading...', noResult: 'No results found',
+    detail: 'Details', high24h: '24h H', low24h: '24h L', buySellSignals: 'Buy/Sell Signals', aiAnalyze: 'AI Analyze',
+    chartLoading: 'Loading chart data...', chartError: 'chart could not be loaded', backendError: 'Ensure backend server is running',
+    aiAnalyzing: 'AI is analyzing the chart, please wait...', globalMarketNews: 'Global Market News', searchNews: 'Search news...',
+    macro: 'Macro', refresh: 'Refresh', noNews: 'No news found', tryDifferentCategory: 'Try a different category or search term.',
+    source: 'Source', newsCount: 'news', setPriceAlert: 'Set Price Alert', telegramConnected: 'Connected ✓', telegramNotConnected: 'Not Connected',
+    alertsAutoForwarded: 'Alerts will be auto-forwarded', checkEnv: "Check backend .env", condition: 'Condition', priceGoesUp: 'If price goes up',
+    priceGoesDown: 'If price goes down', targetPrice: 'Target Price', saveAlert: 'Save Alert', telegramTestMsg: 'Telegram Test Msg',
+    activeAlerts: 'Active Alerts', noAlertsYet: 'No alerts set yet', useLeftPanelToSetAlert: 'Use the left panel to set a new price alert.',
+    ifRises: 'If Rises', ifFalls: 'If Falls', current: 'current', aiAssistant: 'AI Investment Assistant', askSomething: 'Ask something...',
+    aiGreeting: '👋 Hello! I am the nextTrade AI investment assistant.\n\nYou can ask about crypto and stocks, request analysis, or talk about the market.',
+    aiSuggestions: ['What will happen to Bitcoin?', 'Give portfolio advice', 'What is RSI?', 'Is altcoin season starting?', 'What is a safe haven?', 'Analyze NVDA stock'],
+    about: 'About', marketRank: 'Market Rank', marketCap: 'Market Cap', volume24h: 'Volume (24h)', ath: 'All Time High',
+    circulatingSupply: 'Circulating Supply', maxSupply: 'Max Supply', infinite: '∞ Infinite', change7d: '7-Day Change', change30d: '30-Day Change',
+    genesisDate: 'Genesis Date', consensus: 'Consensus Mechanism', categories: 'Categories', staticDataWarning: 'Live data unavailable, showing static info.',
+    sector: 'Sector', industry: 'Industry', peRatio: 'P/E Ratio', eps: 'Earnings Per Share (EPS)', dividendYield: 'Dividend Yield',
+    high52w: '52-Week High', low52w: '52-Week Low', employees: 'Employees', beta: 'Beta', revenue: 'Revenue', profitMargin: 'Profit Margin',
+    generalInfo: 'General Info', loadingInfo: 'Fetching asset information...', infoFetchFailed: 'Failed to fetch info', checkServer: 'Check server connection.', noNewsForAsset: 'No news found for'
+  },
+  DE: {
+    markets: 'Märkte', news: 'Nachrichten', alerts: 'Alarme', mainMenu: 'Hauptmenü', logout: 'Abmelden',
+    marketView: 'Marktübersicht', marketNews: 'Marktnachrichten', priceAlerts: 'Preisalarme',
+    search: 'Suchen...', crypto: 'Krypto', stock: 'Aktien', all: 'Alle', favorites: 'Favoriten',
+    asset: 'Anlage', price: 'Preis', high: 'Hoch', low: 'Tief', change: '24h%', loading: 'Wird geladen...', noResult: 'Keine Ergebnisse',
+    detail: 'Details', high24h: '24h H', low24h: '24h T', buySellSignals: 'Kauf/Verkauf Signale', aiAnalyze: 'KI Analyse',
+    chartLoading: 'Diagrammdaten werden geladen...', chartError: 'Diagramm konnte nicht geladen werden', backendError: 'Stellen Sie sicher, dass der Backend-Server läuft',
+    aiAnalyzing: 'KI analysiert das Diagramm, bitte warten...', globalMarketNews: 'Globale Marktnachrichten', searchNews: 'Nachrichten suchen...',
+    macro: 'Makro', refresh: 'Aktualisieren', noNews: 'Keine Nachrichten gefunden', tryDifferentCategory: 'Versuchen Sie eine andere Kategorie oder einen anderen Suchbegriff.',
+    source: 'Quelle', newsCount: 'Nachrichten', setPriceAlert: 'Preisalarm einstellen', telegramConnected: 'Verbunden ✓', telegramNotConnected: 'Nicht verbunden',
+    alertsAutoForwarded: 'Alarme werden automatisch weitergeleitet', checkEnv: "Überprüfen Sie das Backend .env", condition: 'Bedingung', priceGoesUp: 'Wenn der Preis steigt',
+    priceGoesDown: 'Wenn der Preis fällt', targetPrice: 'Zielpreis', saveAlert: 'Alarm speichern', telegramTestMsg: 'Telegramm-Testnachricht',
+    activeAlerts: 'Aktive Alarme', noAlertsYet: 'Noch keine Alarme eingestellt', useLeftPanelToSetAlert: 'Verwenden Sie das linke Feld, um einen neuen Preisalarm einzustellen.',
+    ifRises: 'Wenn steigt', ifFalls: 'Wenn fällt', current: 'aktuell', aiAssistant: 'KI-Anlageassistent', askSomething: 'Fragen Sie etwas...',
+    aiGreeting: '👋 Hallo! Ich bin der nextTrade KI-Anlageassistent.\n\nSie können nach Krypto und Aktien fragen, Analysen anfordern oder über den Markt sprechen.',
+    aiSuggestions: ['Was passiert mit Bitcoin?', 'Gib Portfolio-Beratung', 'Was ist RSI?', 'Beginnt die Altcoin-Saison?', 'Was ist ein sicherer Hafen?', 'Analysiere NVDA Aktie'],
+    about: 'Über', marketRank: 'Marktrang', marketCap: 'Marktkapitalisierung', volume24h: 'Volumen (24h)', ath: 'Allzeithoch',
+    circulatingSupply: 'Zirkulierende Versorgung', maxSupply: 'Maximale Versorgung', infinite: '∞ Unendlich', change7d: '7-Tage-Veränderung', change30d: '30-Tage-Veränderung',
+    genesisDate: 'Genesis-Datum', consensus: 'Konsensmechanismus', categories: 'Kategorien', staticDataWarning: 'Live-Daten nicht verfügbar, zeige statische Infos.',
+    sector: 'Sektor', industry: 'Industrie', peRatio: 'KGV (PE)', eps: 'Gewinn pro Aktie (EPS)', dividendYield: 'Dividendenrendite',
+    high52w: '52-Wochen-Hoch', low52w: '52-Wochen-Tief', employees: 'Mitarbeiter', beta: 'Beta', revenue: 'Einnahmen', profitMargin: 'Gewinnmarge',
+    generalInfo: 'Allgemeine Infos', loadingInfo: 'Anlageninformationen werden abgerufen...', infoFetchFailed: 'Informationen konnten nicht abgerufen werden', checkServer: 'Überprüfen Sie die Serververbindung.', noNewsForAsset: 'Keine Nachrichten gefunden für'
+  },
+  RU: {
+    markets: 'Рынки', news: 'Новости', alerts: 'Оповещения', mainMenu: 'Главное меню', logout: 'Выйти',
+    marketView: 'Обзор рынка', marketNews: 'Новости рынка', priceAlerts: 'Оповещения о ценах',
+    search: 'Поиск...', crypto: 'Крипто', stock: 'Акции', all: 'Все', favorites: 'Избранное',
+    asset: 'Актив', price: 'Цена', high: 'Макс.', low: 'Мин.', change: '24ч%', loading: 'Загрузка...', noResult: 'Ничего не найдено',
+    detail: 'Детали', high24h: '24ч Макс', low24h: '24ч Мин', buySellSignals: 'Сигналы', aiAnalyze: 'AI Анализ',
+    chartLoading: 'Загрузка данных графика...', chartError: 'График не удалось загрузить', backendError: 'Убедитесь, что сервер работает',
+    aiAnalyzing: 'ИИ анализирует график, пожалуйста, подождите...', globalMarketNews: 'Глобальные новости рынка', searchNews: 'Поиск новостей...',
+    macro: 'Макро', refresh: 'Обновить', noNews: 'Новости не найдены', tryDifferentCategory: 'Попробуйте другую категорию или поисковый запрос.',
+    source: 'Источник', newsCount: 'новостей', setPriceAlert: 'Установить оповещение', telegramConnected: 'Подключено ✓', telegramNotConnected: 'Не подключено',
+    alertsAutoForwarded: 'Оповещения будут пересылаться', checkEnv: "Проверьте .env", condition: 'Условие', priceGoesUp: 'Если цена вырастет',
+    priceGoesDown: 'Если цена упадет', targetPrice: 'Целевая цена', saveAlert: 'Сохранить', telegramTestMsg: 'Тестовое сообщение',
+    activeAlerts: 'Активные оповещения', noAlertsYet: 'Оповещения еще не установлены', useLeftPanelToSetAlert: 'Используйте левую панель для установки оповещения.',
+    ifRises: 'Если вырастет', ifFalls: 'Если упадет', current: 'текущая', aiAssistant: 'ИИ инвестиционный помощник', askSomething: 'Спросите что-нибудь...',
+    aiGreeting: '👋 Здравствуйте! Я ИИ-помощник nextTrade.\n\nВы можете спрашивать о крипте и акциях, запрашивать анализ или обсуждать рынок.',
+    aiSuggestions: ['Что будет с Bitcoin?', 'Дай совет по портфелю', 'Что такое RSI?', 'Начинается ли сезон альткоинов?', 'Что такое тихая гавань?', 'Анализ акции NVDA'],
+    about: 'О проекте', marketRank: 'Рыночный ранг', marketCap: 'Рыночная капитализация', volume24h: 'Объем (24ч)', ath: 'Исторический максимум',
+    circulatingSupply: 'Циркулирующее предложение', maxSupply: 'Максимальное предложение', infinite: '∞ Бесконечно', change7d: 'Изменение за 7 дней', change30d: 'Изменение за 30 дней',
+    genesisDate: 'Дата создания', consensus: 'Механизм консенсуса', categories: 'Категории', staticDataWarning: 'Данные в реальном времени недоступны, показана статическая информация.',
+    sector: 'Сектор', industry: 'Отрасль', peRatio: 'Отношение P/E', eps: 'Прибыль на акцию (EPS)', dividendYield: 'Дивидендная доходность',
+    high52w: '52-недельный максимум', low52w: '52-недельный минимум', employees: 'Сотрудники', beta: 'Бета', revenue: 'Доход', profitMargin: 'Маржа прибыли',
+    generalInfo: 'Общая информация', loadingInfo: 'Получение информации об активе...', infoFetchFailed: 'Не удалось получить информацию', checkServer: 'Проверьте соединение с сервером.', noNewsForAsset: 'Нет новостей для'
+  }
+};
+
+function formatPrice(price, currency = 'USD', rates = { USD: 1 }) {
   if (!price && price !== 0) return '—';
-  if (price >= 1000) return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  if (price >= 1)    return price.toFixed(4);
-  return price.toFixed(6);
+  const rate = rates[currency] || 1;
+  const converted = price * rate;
+  if (converted >= 1000) return converted.toLocaleString(CURRENCIES[currency].locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (converted >= 1)    return converted.toFixed(2);
+  return converted.toFixed(6);
 }
 
 // ============================================================
 // TICKER BAND
 // ============================================================
-function TickerBand({ marketData }) {
+function TickerBand({ marketData, currency, rates }) {
   const items = [...marketData, ...marketData]; // infinite loop için çift
   return (
     <div className="ticker-container" style={{ height: 36 }}>
@@ -58,7 +172,7 @@ function TickerBand({ marketData }) {
           <div key={`${asset.id}-${i}`} className="ticker-item">
             <span style={{ color: 'var(--text-muted)', fontSize: 10, fontWeight: 700 }}>{asset.symbol}</span>
             <span style={{ color: 'var(--text-primary)', fontFamily: 'JetBrains Mono, monospace', fontSize: 11.5 }}>
-              ${formatPrice(asset.price)}
+              {CURRENCIES[currency].symbol}{formatPrice(asset.price, currency, rates)}
             </span>
             <span style={{ color: (asset.change || 0) >= 0 ? 'var(--accent-green)' : 'var(--accent-red)', fontSize: 10.5, fontWeight: 700 }}>
               {(asset.change || 0) >= 0 ? '▲' : '▼'} {Math.abs(asset.change || 0).toFixed(2)}%
@@ -73,7 +187,7 @@ function TickerBand({ marketData }) {
 // ============================================================
 // MARKET MODULE
 // ============================================================
-function MarketModule({ marketData, marketLoading, activeTab, setActiveTab, selectedAsset, setSelectedAsset, favorites, toggleFavorite, searchQuery, setSelectedForDetail }) {
+function MarketModule({ marketData, marketLoading, activeTab, setActiveTab, selectedAsset, setSelectedAsset, favorites, toggleFavorite, searchQuery, setSelectedForDetail, currency, rates, t }) {
   const [sortConfig, setSortConfig] = useState({ key: 'change', direction: 'desc' });
   const [subTab, setSubTab] = useState('all'); // all | favorites
   const [chartData, setChartData] = useState([]);
@@ -164,6 +278,17 @@ function MarketModule({ marketData, marketLoading, activeTab, setActiveTab, sele
     }
   };
 
+  const convertedChartData = useMemo(() => {
+    const rate = rates[currency] || 1;
+    return chartData.map(d => ({
+      ...d,
+      open: d.open * rate,
+      high: d.high * rate,
+      low: d.low * rate,
+      close: d.close * rate
+    }));
+  }, [chartData, currency, rates]);
+
   if (!selectedAsset) return null;
 
   return (
@@ -174,38 +299,38 @@ function MarketModule({ marketData, marketLoading, activeTab, setActiveTab, sele
         <div className="market-tabs">
           <button className={`market-tab ${activeTab === 'crypto' ? 'active' : ''}`}
             onClick={() => { setActiveTab('crypto'); const f = marketData.find(a => a.type === 'crypto'); if (f) setSelectedAsset(f); }}>
-            ₿ Kripto
+            ₿ {t('crypto')}
           </button>
           <button className={`market-tab ${activeTab === 'stock' ? 'active' : ''}`}
             onClick={() => { setActiveTab('stock'); const f = marketData.find(a => a.type === 'stock'); if (f) setSelectedAsset(f); }}>
-            📈 Hisse
+            📈 {t('stock')}
           </button>
         </div>
 
         {/* Sub-tabs: All / Favorites */}
         <div className="market-subtabs">
-          <button className={`sub-tab ${subTab === 'all' ? 'active' : ''}`} onClick={() => setSubTab('all')}>Tümü</button>
+          <button className={`sub-tab ${subTab === 'all' ? 'active' : ''}`} onClick={() => setSubTab('all')}>{t('all')}</button>
           <button className={`sub-tab ${subTab === 'favorites' ? 'active' : ''}`} onClick={() => setSubTab('favorites')}>
-            ⭐ Favoriler {favorites.length > 0 && <span style={{ marginLeft: 3, opacity: 0.7 }}>({favorites.length})</span>}
+            ⭐ {t('favorites')} {favorites.length > 0 && <span style={{ marginLeft: 3, opacity: 0.7 }}>({favorites.length})</span>}
           </button>
         </div>
 
         {/* Table header */}
         <div className="table-header">
           <div className={`table-header-cell ${sortConfig.key === 'name' ? 'sorted' : ''}`} onClick={() => handleSort('name')}>
-            Varlık <SortIcon col="name" />
+            {t('asset')} <SortIcon col="name" />
           </div>
           <div className={`table-header-cell right ${sortConfig.key === 'price' ? 'sorted' : ''}`} onClick={() => handleSort('price')}>
-            Fiyat <SortIcon col="price" />
+            {t('price')} <SortIcon col="price" />
           </div>
           <div className={`table-header-cell right ${sortConfig.key === 'high24h' ? 'sorted' : ''}`} onClick={() => handleSort('high24h')}>
-            Yük. <SortIcon col="high24h" />
+            {t('high')} <SortIcon col="high24h" />
           </div>
           <div className={`table-header-cell right ${sortConfig.key === 'low24h' ? 'sorted' : ''}`} onClick={() => handleSort('low24h')}>
-            Düş. <SortIcon col="low24h" />
+            {t('low')} <SortIcon col="low24h" />
           </div>
           <div className={`table-header-cell right ${sortConfig.key === 'change' ? 'sorted' : ''}`} onClick={() => handleSort('change')}>
-            %24s <SortIcon col="change" />
+            {t('change')} <SortIcon col="change" />
           </div>
         </div>
 
@@ -213,12 +338,12 @@ function MarketModule({ marketData, marketLoading, activeTab, setActiveTab, sele
         <div className="asset-list">
           {marketLoading ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 48, gap: 12, color: 'var(--text-muted)' }}>
-              <div className="spinner" /> Yükleniyor...
+              <div className="spinner" /> {t('loading')}
             </div>
           ) : filteredData.length === 0 ? (
             <div className="empty-state">
               <Search size={36} className="empty-state-icon" />
-              <div className="empty-state-title">Sonuç bulunamadı</div>
+              <div className="empty-state-title">{t('noResult')}</div>
             </div>
           ) : filteredData.map(asset => (
             <div
@@ -237,9 +362,9 @@ function MarketModule({ marketData, marketLoading, activeTab, setActiveTab, sele
                   <span className="asset-name-small">{asset.name.length > 14 ? asset.name.slice(0, 14) + '…' : asset.name}</span>
                 </div>
               </div>
-              <div className="price-cell">${formatPrice(asset.price)}</div>
-              <div className="price-cell" style={{ color: 'var(--text-secondary)', fontSize: 11.5 }}>${(asset.high24h || 0).toLocaleString()}</div>
-              <div className="price-cell" style={{ color: 'var(--text-secondary)', fontSize: 11.5 }}>${(asset.low24h || 0).toLocaleString()}</div>
+              <div className="price-cell">{CURRENCIES[currency].symbol}{formatPrice(asset.price, currency, rates)}</div>
+              <div className="price-cell" style={{ color: 'var(--text-secondary)', fontSize: 11.5 }}>{CURRENCIES[currency].symbol}{formatPrice(asset.high24h, currency, rates)}</div>
+              <div className="price-cell" style={{ color: 'var(--text-secondary)', fontSize: 11.5 }}>{CURRENCIES[currency].symbol}{formatPrice(asset.low24h, currency, rates)}</div>
               <div className={`change-badge ${(asset.change || 0) >= 0 ? 'positive' : 'negative'}`}>
                 {(asset.change || 0) >= 0 ? '+' : ''}{(asset.change || 0).toFixed(2)}%
               </div>
@@ -263,18 +388,18 @@ function MarketModule({ marketData, marketLoading, activeTab, setActiveTab, sele
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(68,136,255,0.18)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'rgba(68,136,255,0.08)'}
                 >
-                  <Info size={10} /> Detay
+                  <Info size={10} /> {t('detail')}
                 </button>
               </div>
               <div className="asset-price-display">
-                <span className="asset-price-main">${formatPrice(selectedAsset.price)}</span>
+                <span className="asset-price-main">{CURRENCIES[currency].symbol}{formatPrice(selectedAsset.price, currency, rates)}</span>
                 <span className={`asset-price-change ${(selectedAsset.change || 0) >= 0 ? 'positive' : 'negative'}`}>
                   {(selectedAsset.change || 0) >= 0 ? '+' : ''}{(selectedAsset.change || 0).toFixed(2)}%
                 </span>
               </div>
               <div style={{ display: 'flex', gap: 16, fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>
-                <span>24s Y: <strong style={{ color: 'var(--accent-green)' }}>${(selectedAsset.high24h || 0).toLocaleString()}</strong></span>
-                <span>24s D: <strong style={{ color: 'var(--accent-red)' }}>${(selectedAsset.low24h || 0).toLocaleString()}</strong></span>
+                <span>{t('high24h')}: <strong style={{ color: 'var(--accent-green)' }}>{CURRENCIES[currency].symbol}{formatPrice(selectedAsset.high24h, currency, rates)}</strong></span>
+                <span>{t('low24h')}: <strong style={{ color: 'var(--accent-red)' }}>{CURRENCIES[currency].symbol}{formatPrice(selectedAsset.low24h, currency, rates)}</strong></span>
               </div>
             </div>
           </div>
@@ -289,10 +414,10 @@ function MarketModule({ marketData, marketLoading, activeTab, setActiveTab, sele
           </div>
           <div style={{ flex: 1 }} />
           <button className={`action-btn amber ${showSignals ? 'active' : ''}`} onClick={() => setShowSignals(!showSignals)}>
-            <Bot size={13} /> Al/Sat Sinyalleri
+            <Bot size={13} /> {t('buySellSignals')}
           </button>
           <button className="action-btn purple" onClick={handleAnalyzeChart}>
-            <Sparkles size={13} /> AI Yorumla
+            <Sparkles size={13} /> {t('aiAnalyze')}
           </button>
         </div>
 
@@ -301,15 +426,15 @@ function MarketModule({ marketData, marketLoading, activeTab, setActiveTab, sele
           {isLoadingChart ? (
             <div className="chart-loading">
               <div className="spinner" />
-              <span style={{ fontSize: 13 }}>Grafik verileri çekiliyor...</span>
+              <span style={{ fontSize: 13 }}>{t('chartLoading')}</span>
             </div>
           ) : chartData.length > 0 ? (
-            <Chart data={chartData} signals={showSignals ? signals : []} />
+            <Chart data={convertedChartData} signals={showSignals ? signals : []} />
           ) : (
             <div className="chart-loading" style={{ flexDirection: 'column', gap: 10 }}>
               <BarChart2 size={48} style={{ opacity: 0.15 }} />
-              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-muted)' }}>{selectedAsset.symbol} grafiği yüklenemedi</span>
-              <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>Backend sunucunun çalıştığından emin olun</span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-muted)' }}>{selectedAsset.symbol} {t('chartError')}</span>
+              <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>{t('backendError')}</span>
             </div>
           )}
         </div>
@@ -329,7 +454,7 @@ function MarketModule({ marketData, marketLoading, activeTab, setActiveTab, sele
               {aiAnalysis ? aiAnalysis : (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 48, gap: 14, color: 'var(--text-muted)' }}>
                   <Sparkles size={32} style={{ color: 'var(--accent-purple)', opacity: 0.6 }} className="animate-float" />
-                  <span style={{ fontSize: 13 }}>AI grafiği analiz ediyor, lütfen bekleyin...</span>
+                  <span style={{ fontSize: 13 }}>{t('aiAnalyzing')}</span>
                   <div className="spinner" />
                 </div>
               )}
@@ -344,7 +469,7 @@ function MarketModule({ marketData, marketLoading, activeTab, setActiveTab, sele
 // ============================================================
 // NEWS MODULE
 // ============================================================
-function NewsModule({ onSummarizeNews }) {
+function NewsModule({ onSummarizeNews, t }) {
   const [newsData, setNewsData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [category, setCategory] = useState('all');
@@ -353,10 +478,10 @@ function NewsModule({ onSummarizeNews }) {
   const PER_PAGE = 9;
 
   const categories = [
-    { id: 'all',     label: '🌐 Tümü' },
-    { id: 'crypto',  label: '₿ Kripto' },
-    { id: 'stock',   label: '📈 Hisse' },
-    { id: 'macro',   label: '🏦 Makro' },
+    { id: 'all',     label: `🌐 ${t('all')}` },
+    { id: 'crypto',  label: `₿ ${t('crypto')}` },
+    { id: 'stock',   label: `📈 ${t('stock')}` },
+    { id: 'macro',   label: `🏦 ${t('macro')}` },
   ];
 
   useEffect(() => {
@@ -383,14 +508,14 @@ function NewsModule({ onSummarizeNews }) {
       <div className="news-header">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Newspaper size={20} style={{ color: 'var(--accent-blue)' }} /> Küresel Piyasa Bülteni
+            <Newspaper size={20} style={{ color: 'var(--accent-blue)' }} /> {t('globalMarketNews')}
           </h2>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div style={{ position: 'relative' }}>
               <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
               <input
                 type="text"
-                placeholder="Haberlerde ara..."
+                placeholder={t('searchNews')}
                 value={searchNews}
                 onChange={e => { setSearchNews(e.target.value); setPage(1); }}
                 style={{ paddingLeft: 30, paddingRight: 12, paddingTop: 7, paddingBottom: 7, fontSize: 12, background: 'rgba(13,21,38,0.8)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-full)', color: 'var(--text-primary)', outline: 'none', width: 180 }}
@@ -398,7 +523,7 @@ function NewsModule({ onSummarizeNews }) {
             </div>
             <button onClick={() => { setLoading(true); axios.get(`${API_BASE_URL}/api/stocks/market/news`).then(r => setNewsData(r.data || [])).finally(() => setLoading(false)); }}
               style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 12px', background: 'rgba(68,136,255,0.08)', border: '1px solid rgba(68,136,255,0.15)', borderRadius: 'var(--radius-md)', fontSize: 12, color: 'var(--accent-blue)', cursor: 'pointer' }}>
-              <RefreshCw size={12} /> Yenile
+              <RefreshCw size={12} /> {t('refresh')}
             </button>
           </div>
         </div>
@@ -413,13 +538,13 @@ function NewsModule({ onSummarizeNews }) {
 
       {loading ? (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, color: 'var(--text-muted)', flexDirection: 'column' }}>
-          <div className="spinner" /> Haberler yükleniyor...
+          <div className="spinner" /> {t('loading')}
         </div>
       ) : pageNews.length === 0 ? (
         <div className="empty-state" style={{ flex: 1 }}>
           <Newspaper size={48} className="empty-state-icon" />
-          <div className="empty-state-title">Haber bulunamadı</div>
-          <div className="empty-state-desc">Farklı bir kategori veya arama terimi deneyin.</div>
+          <div className="empty-state-title">{t('noNews')}</div>
+          <div className="empty-state-desc">{t('tryDifferentCategory')}</div>
         </div>
       ) : (
         <>
@@ -428,16 +553,16 @@ function NewsModule({ onSummarizeNews }) {
               <div key={idx} className="news-card" onClick={() => window.open(news.link, '_blank')}>
                 <div>
                   <div className="news-source-line">
-                    <span className="news-source">{news.publisher || 'Kaynak'}</span>
+                    <span className="news-source">{news.publisher || t('source')}</span>
                     <span className="news-date">
-                      {news.timestamp ? new Date(news.timestamp * 1000).toLocaleDateString('tr-TR') : ''}
+                      {news.timestamp ? (typeof news.timestamp === 'number' ? new Date(news.timestamp * 1000).toLocaleDateString('tr-TR') : new Date(news.timestamp).toLocaleDateString('tr-TR')) : ''}
                     </span>
                   </div>
                   <div className="news-title">{news.title}</div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
                   <button className="news-ai-btn" onClick={e => { e.stopPropagation(); onSummarizeNews && onSummarizeNews(news.title); }}>
-                    <Sparkles size={10} /> AI Yorumla
+                    <Sparkles size={10} /> {t('aiAnalyze')}
                   </button>
                   <ExternalLink size={12} style={{ color: 'var(--text-dim)' }} />
                 </div>
@@ -461,7 +586,7 @@ function NewsModule({ onSummarizeNews }) {
               <button className="page-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
                 <ChevronRight size={14} />
               </button>
-              <span style={{ fontSize: 11, color: 'var(--text-dim)', marginLeft: 8 }}>{filteredNews.length} haber</span>
+              <span style={{ fontSize: 11, color: 'var(--text-dim)', marginLeft: 8 }}>{filteredNews.length} {t('newsCount')}</span>
             </div>
           )}
         </>
@@ -473,7 +598,7 @@ function NewsModule({ onSummarizeNews }) {
 // ============================================================
 // ALERTS MODULE
 // ============================================================
-function AlertsModule({ marketData }) {
+function AlertsModule({ marketData, currency, rates, t }) {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [telegramStatus, setTelegramStatus] = useState(null);
@@ -481,9 +606,13 @@ function AlertsModule({ marketData }) {
 
   const currentPrice = marketData.find(m => m.symbol.toUpperCase() === form.symbol.toUpperCase())?.price;
 
+  const getAuthHeaders = () => ({
+    headers: { Authorization: `Bearer ${localStorage.getItem('nt_token')}` }
+  });
+
   const fetchAlerts = async () => {
     setLoading(true);
-    try { const r = await axios.get(`${API_BASE_URL}/api/alerts/`); setAlerts(r.data || []); }
+    try { const r = await axios.get(`${API_BASE_URL}/api/alerts/`, getAuthHeaders()); setAlerts(r.data || []); }
     catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -500,19 +629,20 @@ function AlertsModule({ marketData }) {
   const handleAdd = async (e) => {
     e.preventDefault();
     if (!form.target_price) return;
+    const rate = rates[currency] || 1;
     try {
       await axios.post(`${API_BASE_URL}/api/alerts/`, {
         symbol: form.symbol,
-        target_price: parseFloat(form.target_price),
+        target_price: parseFloat(form.target_price) / rate,
         condition: form.condition
-      });
+      }, getAuthHeaders());
       setForm(prev => ({ ...prev, target_price: '' }));
       fetchAlerts();
     } catch (e) { console.error(e); }
   };
 
   const handleDelete = async (id) => {
-    try { await axios.delete(`${API_BASE_URL}/api/alerts/${id}`); fetchAlerts(); }
+    try { await axios.delete(`${API_BASE_URL}/api/alerts/${id}`, getAuthHeaders()); fetchAlerts(); }
     catch (e) { console.error(e); }
   };
 
@@ -522,7 +652,7 @@ function AlertsModule({ marketData }) {
       <div className="alerts-form-panel">
         <div>
           <h2 style={{ fontSize: 18, fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <Bell size={18} style={{ color: 'var(--accent-blue)' }} /> Fiyat Alarmı Kur
+            <Bell size={18} style={{ color: 'var(--accent-blue)' }} /> {t('setPriceAlert')}
           </h2>
 
           {/* Telegram Status */}
@@ -531,10 +661,10 @@ function AlertsModule({ marketData }) {
             <div className={`status-dot ${telegramStatus === 'connected' ? 'connected' : 'disconnected'}`} />
             <div>
               <div style={{ fontSize: 12, fontWeight: 600, color: telegramStatus === 'connected' ? 'var(--accent-green)' : 'var(--accent-red)' }}>
-                Telegram {telegramStatus === 'connected' ? 'Bağlı ✓' : 'Bağlı Değil'}
+                Telegram {telegramStatus === 'connected' ? t('telegramConnected') : t('telegramNotConnected')}
               </div>
               <div style={{ fontSize: 10.5, color: 'var(--text-dim)', marginTop: 1 }}>
-                {telegramStatus === 'connected' ? 'Alarmlar otomatik iletilecek' : 'Backend .env\'yi kontrol edin'}
+                {telegramStatus === 'connected' ? t('alertsAutoForwarded') : t('checkEnv')}
               </div>
             </div>
           </div>
@@ -549,7 +679,8 @@ function AlertsModule({ marketData }) {
               onChange={e => {
                 const sym = e.target.value;
                 const asset = marketData.find(m => m.symbol === sym);
-                setForm({ ...form, symbol: sym, target_price: asset ? asset.price : '' });
+                const rate = rates[currency] || 1;
+                setForm({ ...form, symbol: sym, target_price: asset ? (asset.price * rate).toFixed(asset.price * rate < 1 ? 6 : 2) : '' });
               }}
             >
               {marketData.map(a => (
@@ -558,21 +689,21 @@ function AlertsModule({ marketData }) {
             </select>
             {currentPrice && (
               <span style={{ fontSize: 11, color: 'var(--accent-green)', marginTop: 3, fontFamily: 'JetBrains Mono, monospace' }}>
-                Güncel: ${formatPrice(currentPrice)}
+                {t('current')}: {CURRENCIES[currency].symbol}{formatPrice(currentPrice, currency, rates)}
               </span>
             )}
           </div>
 
           <div className="form-group">
-            <label className="form-label">Koşul</label>
+            <label className="form-label">{t('condition')}</label>
             <select className="form-select" value={form.condition} onChange={e => setForm({ ...form, condition: e.target.value })}>
-              <option value="greater">📈 Fiyat yukarı geçerse</option>
-              <option value="less">📉 Fiyat aşağı düşerse</option>
+              <option value="greater">📈 {t('priceGoesUp')}</option>
+              <option value="less">📉 {t('priceGoesDown')}</option>
             </select>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Hedef Fiyat ($)</label>
+            <label className="form-label">{t('targetPrice')} ({CURRENCIES[currency].symbol})</label>
             <input
               className="form-input"
               type="number"
@@ -585,7 +716,7 @@ function AlertsModule({ marketData }) {
           </div>
 
           <button type="submit" className="btn-primary">
-            <Plus size={15} /> Alarmı Kaydet
+            <Plus size={15} /> {t('saveAlert')}
           </button>
         </form>
 
@@ -601,7 +732,7 @@ function AlertsModule({ marketData }) {
             }}
             style={{ display: 'flex', alignItems: 'center', gap: 7, width: '100%', padding: '10px 14px', background: 'rgba(68,136,255,0.08)', border: '1px solid rgba(68,136,255,0.15)', borderRadius: 'var(--radius-md)', fontSize: 12.5, fontWeight: 600, color: 'var(--accent-blue)', cursor: 'pointer', transition: 'var(--transition-fast)' }}
           >
-            <Smartphone size={14} /> Telegram Test Mesajı
+            <Smartphone size={14} /> {t('telegramTestMsg')}
           </button>
         </div>
       </div>
@@ -610,11 +741,11 @@ function AlertsModule({ marketData }) {
       <div className="alerts-list-panel">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
           <h3 style={{ fontSize: 16, fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif' }}>
-            Aktif Alarmlar
+            {t('activeAlerts')}
             {alerts.length > 0 && <span style={{ marginLeft: 8, fontSize: 12, background: 'rgba(68,136,255,0.12)', border: '1px solid rgba(68,136,255,0.2)', borderRadius: 'var(--radius-full)', padding: '2px 8px', color: 'var(--accent-blue)' }}>{alerts.length}</span>}
           </h3>
           <button onClick={fetchAlerts} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', background: 'transparent', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', fontSize: 11.5, color: 'var(--text-muted)', cursor: 'pointer' }}>
-            <RefreshCw size={12} /> Yenile
+            <RefreshCw size={12} /> {t('refresh')}
           </button>
         </div>
 
@@ -625,8 +756,8 @@ function AlertsModule({ marketData }) {
         ) : alerts.length === 0 ? (
           <div className="empty-state">
             <Bell size={48} className="empty-state-icon" />
-            <div className="empty-state-title">Henüz alarm kurulmadı</div>
-            <div className="empty-state-desc">Sol paneli kullanarak yeni bir fiyat alarmı kurun.</div>
+            <div className="empty-state-title">{t('noAlertsYet')}</div>
+            <div className="empty-state-desc">{t('useLeftPanelToSetAlert')}</div>
           </div>
         ) : (
           alerts.map(alert => {
@@ -644,16 +775,16 @@ function AlertsModule({ marketData }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
                       <span style={{ fontWeight: 700, fontSize: 15, fontFamily: 'Space Grotesk, sans-serif' }}>{alert.symbol}</span>
                       <span className={`badge ${alert.condition === 'greater' ? 'green' : 'red'}`}>
-                        {alert.condition === 'greater' ? '▲ Yükselirse' : '▼ Düşerse'}
+                        {alert.condition === 'greater' ? `▲ ${t('ifRises')}` : `▼ ${t('ifFalls')}`}
                       </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                       <span style={{ fontSize: 18, fontWeight: 700, fontFamily: 'JetBrains Mono, monospace' }}>
-                        ${formatPrice(alert.target_price)}
+                        {CURRENCIES[currency].symbol}{formatPrice(alert.target_price, currency, rates)}
                       </span>
                       {current > 0 && (
                         <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>
-                          (güncel: ${formatPrice(current)})
+                          ({t('current')}: {CURRENCIES[currency].symbol}{formatPrice(current, currency, rates)})
                         </span>
                       )}
                     </div>
@@ -689,11 +820,11 @@ function AlertsModule({ marketData }) {
 // ============================================================
 // AI CHAT
 // ============================================================
-function AIChat({ selectedAsset }) {
+function AIChat({ selectedAsset, currency, rates, t }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([{
     sender: 'ai',
-    text: '👋 Merhaba! Ben nextTrade\'in AI yatırım asistanıyım.\n\nKripto ve hisse senetleri hakkında soru sorabilir, analiz isteyebilir veya piyasa hakkında konuşabiliriz.'
+    text: 'GREETING_MSG'
   }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -714,7 +845,7 @@ function AIChat({ selectedAsset }) {
       const res = await axios.post(`${API_BASE_URL}/api/ai/chat`, {
         message: msg,
         history: messages.slice(-10),
-        context_news: selectedAsset ? `Kullanıcı şu an ${selectedAsset.name} (${selectedAsset.symbol}) bakıyor. Fiyat: $${selectedAsset.price}, 24s değişim: ${selectedAsset.change}%` : ''
+        context_news: selectedAsset ? `Kullanıcı şu an ${selectedAsset.name} (${selectedAsset.symbol}) bakıyor. Fiyat: ${CURRENCIES[currency].symbol}${formatPrice(selectedAsset.price, currency, rates)}, 24s değişim: ${selectedAsset.change}%` : ''
       });
       setMessages(prev => [...prev, { sender: 'ai', text: res.data.reply }]);
     } catch {
@@ -731,7 +862,7 @@ function AIChat({ selectedAsset }) {
           <div className="chat-header">
             <div className="chat-title">
               <Bot size={16} />
-              AI Yatırım Asistanı
+              {t('aiAssistant')}
               <div className="chat-online-dot" />
             </div>
             <button className="icon-btn" onClick={() => setOpen(false)}><X size={14} /></button>
@@ -741,7 +872,7 @@ function AIChat({ selectedAsset }) {
             {messages.map((msg, i) => (
               <div key={i} className={`chat-msg ${msg.sender}`}>
                 <div className={`chat-bubble ${msg.sender}`} style={{ whiteSpace: 'pre-wrap' }}>
-                  {msg.text}
+                  {msg.text === 'GREETING_MSG' ? t('aiGreeting') : msg.text}
                 </div>
               </div>
             ))}
@@ -759,7 +890,7 @@ function AIChat({ selectedAsset }) {
 
           {/* Quick Suggestions */}
           <div className="chat-suggestions">
-            {AI_SUGGESTIONS.map((s, i) => (
+            {(t('aiSuggestions') || []).map((s, i) => (
               <button key={i} className="suggestion-chip" onClick={() => send(s)}>{s}</button>
             ))}
           </div>
@@ -767,7 +898,7 @@ function AIChat({ selectedAsset }) {
           <div className="chat-input-row">
             <input
               className="chat-input"
-              placeholder="Bir şey sorun..."
+              placeholder={t('askSomething')}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && send()}
@@ -805,7 +936,27 @@ export default function App() {
   const [favorites, setFavorites] = useState(() => {
     try { return JSON.parse(localStorage.getItem('nextTrade_favorites')) || []; } catch { return []; }
   });
+  const [currency, setCurrency] = useState(() => localStorage.getItem('nt_currency') || 'USD');
+  const [rates, setRates] = useState({ USD: 1, TRY: 32.5, GBP: 0.79, KZT: 445.0, RUB: 92.5 });
+  const [lang, setLang] = useState(() => localStorage.getItem('nt_lang') || 'TR');
   const [lastUpdated, setLastUpdated] = useState(null);
+
+  const t = (key) => TRANSLATIONS[lang]?.[key] || key;
+
+  useEffect(() => {
+    localStorage.setItem('nt_currency', currency);
+  }, [currency]);
+
+  useEffect(() => {
+    localStorage.setItem('nt_lang', lang);
+  }, [lang]);
+
+  useEffect(() => {
+    axios.get('https://open.er-api.com/v6/latest/USD')
+      .then(res => {
+        if (res.data && res.data.rates) setRates(prev => ({ ...prev, ...res.data.rates }));
+      }).catch(console.error);
+  }, []);
 
   // Favorileri kaydet
   useEffect(() => {
@@ -865,9 +1016,9 @@ export default function App() {
   }
 
   const navItems = [
-    { id: 'markets', icon: <BarChart2 size={17} />, label: 'Piyasalar' },
-    { id: 'news',    icon: <Newspaper size={17} />, label: 'Haberler' },
-    { id: 'alerts',  icon: <Bell size={17} />,      label: 'Alarmlar' },
+    { id: 'markets', icon: <BarChart2 size={17} />, label: t('markets') },
+    { id: 'news',    icon: <Newspaper size={17} />, label: t('news') },
+    { id: 'alerts',  icon: <Bell size={17} />,      label: t('alerts') },
   ];
 
   return (
@@ -884,7 +1035,7 @@ export default function App() {
 
         {/* Nav */}
         <nav className="sidebar-nav">
-          <div className="nav-section-label">Ana Menü</div>
+          <div className="nav-section-label">{t('mainMenu')}</div>
           {navItems.map(item => (
             <button
               key={item.id}
@@ -913,7 +1064,7 @@ export default function App() {
               @{user.username}
             </div>
           </div>
-          <button onClick={handleLogout} title="Çıkış Yap"
+          <button onClick={handleLogout} title={t('logout')}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-dim)', padding: 4, display: 'flex', alignItems: 'center', transition: 'var(--transition-fast)' }}
             onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-red)'}
             onMouseLeave={e => e.currentTarget.style.color = 'var(--text-dim)'}>
@@ -925,14 +1076,14 @@ export default function App() {
       {/* MAIN CONTENT */}
       <div className="main-content">
         {/* Ticker Band */}
-        <TickerBand marketData={marketData} />
+        <TickerBand marketData={marketData} currency={currency} rates={rates} />
 
         {/* Topbar */}
         <div className="topbar">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span className="topbar-title">
-              {activeModule === 'markets' ? 'Piyasa Görünümü' :
-               activeModule === 'news'    ? 'Piyasa Bülteni'  : 'Fiyat Alarmları'}
+              {activeModule === 'markets' ? t('marketView') :
+               activeModule === 'news'    ? t('marketNews')  : t('priceAlerts')}
             </span>
             {lastUpdated && activeModule === 'markets' && (
               <span style={{ fontSize: 10.5, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -948,12 +1099,30 @@ export default function App() {
                 <Search size={13} className="search-icon" />
                 <input
                   type="text"
-                  placeholder="Varlık ara..."
+                  placeholder={t('search')}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                 />
               </div>
             )}
+            <select
+              value={lang}
+              onChange={e => setLang(e.target.value)}
+              style={{ padding: '6px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(13,21,38,0.8)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', outline: 'none', fontSize: 12, cursor: 'pointer', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 600 }}
+            >
+              {Object.keys(LANGUAGES).map(l => (
+                <option key={l} value={l}>{LANGUAGES[l].flag} {l}</option>
+              ))}
+            </select>
+            <select
+              value={currency}
+              onChange={e => setCurrency(e.target.value)}
+              style={{ padding: '6px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(13,21,38,0.8)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', outline: 'none', fontSize: 12, cursor: 'pointer', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 600 }}
+            >
+              {Object.keys(CURRENCIES).map(c => (
+                <option key={c} value={c}>{CURRENCIES[c].symbol} {c}</option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -971,13 +1140,16 @@ export default function App() {
               toggleFavorite={toggleFavorite}
               searchQuery={searchQuery}
               setSelectedForDetail={setSelectedForDetail}
+              currency={currency}
+              rates={rates}
+              t={t}
             />
           )}
           {activeModule === 'news' && (
-            <NewsModule onSummarizeNews={handleSummarizeNews} />
+            <NewsModule onSummarizeNews={handleSummarizeNews} t={t} />
           )}
           {activeModule === 'alerts' && (
-            <AlertsModule marketData={marketData} />
+            <AlertsModule marketData={marketData} currency={currency} rates={rates} t={t} />
           )}
         </div>
       </div>
@@ -991,11 +1163,14 @@ export default function App() {
             setSelectedForDetail(null);
             handleSummarizeNews(title);
           }}
+          currency={currency}
+          rates={rates}
+          t={t}
         />
       )}
 
       {/* AI Chat FAB */}
-      <AIChat selectedAsset={selectedAsset} />
+      <AIChat selectedAsset={selectedAsset} currency={currency} rates={rates} t={t} />
     </div>
   );
 }
