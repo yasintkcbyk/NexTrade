@@ -90,7 +90,7 @@ export default function LoginPage({ onLogin }) {
         </div>
 
         {/* Form */}
-        <form className="login-form" onSubmit={handleSubmit}>
+        <form key={mode} className="login-form" onSubmit={handleSubmit}>
           {mode === 'register' && (
             <div className="login-input-group">
               <label className="login-label">Ad Soyad (isteğe bağlı)</label>
