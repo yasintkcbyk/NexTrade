@@ -16,6 +16,7 @@ COINGECKO_ID_MAP = {
     "binancecoin": "binancecoin",
     "polkadot": "polkadot",
     "chainlink": "chainlink",
+    "matic-network": "matic-network",
 }
 
 def get_coin_detail(coin_id: str) -> dict:

@@ -48,6 +48,9 @@ def delete_alert(alert_id: int, current_user: User = Depends(get_current_user), 
     return {"message": "Alarm silindi"}
 
 @router.get("/test")
-def test_alert():
-    result = send_telegram_alert("🚀 *Yatırım Asistanı* botu başarıyla Telegram'a bağlandı!\n\nArtık fiyat alarmlarını buradan alacaksın.")
+def test_alert(current_user: User = Depends(get_current_user)):
+    chat_id = current_user.telegram_chat_id
+    if not chat_id:
+        return {"success": False, "error": "Chat ID bulunamadı."}
+    result = send_telegram_alert("🚀 *Yatırım Asistanı* botu başarıyla Telegram'a bağlandı!\n\nArtık fiyat alarmlarını buradan alacaksın.", chat_id=chat_id)
     return result

@@ -24,7 +24,7 @@ const FALLBACK_MARKET = [
   { id: 'binancecoin', symbol: 'BNB',    name: 'BNB',              price: 600.50,   change: 1.20,  high24h: 610.0, low24h: 590.0, type: 'crypto' },
   { id: 'polkadot',  symbol: 'DOT',      name: 'Polkadot',         price: 8.20,     change: -0.50, high24h: 8.50,  low24h: 8.10,  type: 'crypto' },
   { id: 'chainlink', symbol: 'LINK',     name: 'Chainlink',        price: 17.80,    change: 2.10,  high24h: 18.20, low24h: 17.40, type: 'crypto' },
-  { id: 'matic-network', symbol: 'MATIC',name: 'Polygon',          price: 0.82,     change: -1.10, high24h: 0.85,  low24h: 0.80,  type: 'crypto' },
+  { id: 'matic-network', symbol: 'POL',  name: 'Polygon (POL)',    price: 0.42,     change: -1.10, high24h: 0.45,  low24h: 0.40,  type: 'crypto' },
   { id: 'tron',      symbol: 'TRX',      name: 'TRON',             price: 0.115,    change: 0.50,  high24h: 0.12,  low24h: 0.11,  type: 'crypto' },
   { id: 'AAPL',      symbol: 'AAPL',     name: 'Apple Inc.',       price: 175.50,   change: 1.15,  high24h: 178,   low24h: 174,   type: 'stock' },
   { id: 'TSLA',      symbol: 'TSLA',     name: 'Tesla',            price: 195.20,   change: -3.45, high24h: 200,   low24h: 190,   type: 'stock' },
@@ -598,11 +598,13 @@ function NewsModule({ onSummarizeNews, t }) {
 // ============================================================
 // ALERTS MODULE
 // ============================================================
-function AlertsModule({ marketData, currency, rates, t }) {
+function AlertsModule({ marketData, currency, rates, t, user, setUser }) {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [telegramStatus, setTelegramStatus] = useState(null);
   const [form, setForm] = useState({ symbol: 'BTC', target_price: '', condition: 'greater' });
+  const [chatIdInput, setChatIdInput] = useState(user?.telegram_chat_id || '');
+  const [isEditingChatId, setIsEditingChatId] = useState(false);
 
   const currentPrice = marketData.find(m => m.symbol.toUpperCase() === form.symbol.toUpperCase())?.price;
 
@@ -618,10 +620,27 @@ function AlertsModule({ marketData, currency, rates, t }) {
   };
 
   const checkTelegram = async () => {
+    if (!user?.telegram_chat_id) {
+      setTelegramStatus('error');
+      return;
+    }
     try {
-      const r = await axios.get(`${API_BASE_URL}/api/alerts/test`);
+      const r = await axios.get(`${API_BASE_URL}/api/alerts/test`, getAuthHeaders());
       setTelegramStatus(r.data?.success ? 'connected' : 'error');
     } catch { setTelegramStatus('error'); }
+  };
+
+  const handleSaveChatId = async () => {
+    try {
+      const res = await axios.put(`${API_BASE_URL}/api/auth/me/telegram`, { telegram_chat_id: chatIdInput }, getAuthHeaders());
+      const updatedUser = res.data;
+      setUser(updatedUser);
+      localStorage.setItem('nt_user', JSON.stringify(updatedUser));
+      setIsEditingChatId(false);
+      setTelegramStatus('connected');
+    } catch (e) {
+      alert("Chat ID kaydedilemedi.");
+    }
   };
 
   useEffect(() => { fetchAlerts(); checkTelegram(); }, []);
@@ -656,17 +675,39 @@ function AlertsModule({ marketData, currency, rates, t }) {
           </h2>
 
           {/* Telegram Status */}
-          <div className={`telegram-status ${telegramStatus === 'connected' ? '' : ''}`}
-            style={{ background: telegramStatus === 'connected' ? 'rgba(16,185,129,0.08)' : 'rgba(244,63,94,0.08)', borderColor: telegramStatus === 'connected' ? 'rgba(16,185,129,0.15)' : 'rgba(244,63,94,0.15)' }}>
-            <div className={`status-dot ${telegramStatus === 'connected' ? 'connected' : 'disconnected'}`} />
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: telegramStatus === 'connected' ? 'var(--accent-green)' : 'var(--accent-red)' }}>
-                Telegram {telegramStatus === 'connected' ? t('telegramConnected') : t('telegramNotConnected')}
+          <div className={`telegram-status ${user?.telegram_chat_id && !isEditingChatId ? '' : ''}`}
+            style={{ background: user?.telegram_chat_id ? 'rgba(16,185,129,0.08)' : 'rgba(244,63,94,0.08)', borderColor: user?.telegram_chat_id ? 'rgba(16,185,129,0.15)' : 'rgba(244,63,94,0.15)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div className={`status-dot ${user?.telegram_chat_id ? 'connected' : 'disconnected'}`} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: user?.telegram_chat_id ? 'var(--accent-green)' : 'var(--accent-red)' }}>
+                  Telegram {user?.telegram_chat_id ? t('telegramConnected') : t('telegramNotConnected')}
+                </div>
+                <div style={{ fontSize: 10.5, color: 'var(--text-dim)', marginTop: 1 }}>
+                  {user?.telegram_chat_id ? 'Chat ID: ' + user.telegram_chat_id : 'Chat ID gerekli'}
+                </div>
               </div>
-              <div style={{ fontSize: 10.5, color: 'var(--text-dim)', marginTop: 1 }}>
-                {telegramStatus === 'connected' ? t('alertsAutoForwarded') : t('checkEnv')}
-              </div>
+              {user?.telegram_chat_id && !isEditingChatId && (
+                <button onClick={() => setIsEditingChatId(true)} style={{ fontSize: 11, background: 'none', border: 'none', color: 'var(--accent-blue)', cursor: 'pointer' }}>Düzenle</button>
+              )}
             </div>
+
+            {(!user?.telegram_chat_id || isEditingChatId) && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>ID'nizi öğrenmek için Telegram'da <strong>@userinfobot</strong>'a yazın.</span>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input type="text" value={chatIdInput} onChange={e => setChatIdInput(e.target.value)} placeholder="Örn: 123456789" style={{ flex: 1, padding: '6px 10px', fontSize: 12, background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', color: 'white' }} />
+                  <button type="button" onClick={handleSaveChatId} style={{ padding: '6px 12px', fontSize: 12, background: 'var(--accent-blue)', border: 'none', borderRadius: 'var(--radius-md)', color: 'white', cursor: 'pointer', fontWeight: 600 }}>Kaydet</button>
+                </div>
+                {user?.telegram_chat_id && isEditingChatId && (
+                  <button type="button" onClick={() => { setIsEditingChatId(false); setChatIdInput(user.telegram_chat_id); }} style={{ fontSize: 11, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', alignSelf: 'flex-start' }}>İptal</button>
+                )}
+              </div>
+            )}
+            
+            {user?.telegram_chat_id && !isEditingChatId && (
+              <button onClick={checkTelegram} type="button" style={{ marginTop: 4, padding: '4px 8px', fontSize: 11, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 'var(--radius-sm)', color: 'var(--text-muted)', cursor: 'pointer', alignSelf: 'flex-start' }}>Test Mesajı Gönder</button>
+            )}
           </div>
         </div>
 
@@ -1149,7 +1190,7 @@ export default function App() {
             <NewsModule onSummarizeNews={handleSummarizeNews} t={t} />
           )}
           {activeModule === 'alerts' && (
-            <AlertsModule marketData={marketData} currency={currency} rates={rates} t={t} />
+            <AlertsModule marketData={marketData} currency={currency} rates={rates} t={t} user={user} setUser={setUser} />
           )}
         </div>
       </div>

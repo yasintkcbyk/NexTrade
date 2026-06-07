@@ -13,7 +13,7 @@ CRYPTO_ASSETS = [
     {"id": "binancecoin", "symbol": "BNB", "name": "BNB", "type": "crypto", "high24h": 610.0, "low24h": 590.0, "change": 1.20},
     {"id": "polkadot", "symbol": "DOT", "name": "Polkadot", "type": "crypto", "high24h": 8.50, "low24h": 8.10, "change": -0.50},
     {"id": "chainlink", "symbol": "LINK", "name": "Chainlink", "type": "crypto", "high24h": 18.20, "low24h": 17.40, "change": 2.10},
-    {"id": "matic-network", "symbol": "MATIC", "name": "Polygon", "type": "crypto", "high24h": 0.85, "low24h": 0.80, "change": -1.10},
+    {"id": "matic-network", "symbol": "POL", "name": "Polygon (POL)", "type": "crypto", "high24h": 0.45, "low24h": 0.40, "change": -1.10},
     {"id": "tron", "symbol": "TRX", "name": "TRON", "type": "crypto", "high24h": 0.12, "low24h": 0.11, "change": 0.50},
 ]
 

@@ -37,14 +37,16 @@ async def check_prices_periodically():
 
             for alert in alerts:
                 current_price = prices.get(alert.symbol)
-                if current_price is not None:
+                chat_id = alert.owner.telegram_chat_id if alert.owner else None
+                
+                if current_price is not None and chat_id:
                     if alert.condition == "greater" and current_price >= alert.target_price:
-                        await asyncio.to_thread(send_telegram_alert, f"🚨 *FİYAT ALARMI*\n\n{alert.symbol.upper()} hedefe ulaştı!\nGüncel Fiyat: *${current_price}*")
+                        await asyncio.to_thread(send_telegram_alert, f"🚨 *FİYAT ALARMI*\n\n{alert.symbol.upper()} hedefe ulaştı!\nGüncel Fiyat: *${current_price}*", chat_id)
                         db.delete(alert) # Alarm bir kere çalınca veritabanından silinir
                         db.commit()
                         
                     elif alert.condition == "less" and current_price <= alert.target_price:
-                        await asyncio.to_thread(send_telegram_alert, f"🚨 *FİYAT ALARMI*\n\n{alert.symbol.upper()} düştü!\nGüncel Fiyat: *${current_price}*")
+                        await asyncio.to_thread(send_telegram_alert, f"🚨 *FİYAT ALARMI*\n\n{alert.symbol.upper()} düştü!\nGüncel Fiyat: *${current_price}*", chat_id)
                         db.delete(alert)
                         db.commit()
         except Exception as e:

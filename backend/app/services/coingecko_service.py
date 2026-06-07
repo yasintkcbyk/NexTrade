@@ -24,7 +24,7 @@ def get_crypto_data(coin_id: str):
         "binancecoin": "BNB",
         "polkadot": "DOT",
         "chainlink": "LINK",
-        "matic-network": "MATIC",
+        "matic-network": "POL",
         "tron": "TRX"
     }
     
@@ -106,7 +106,7 @@ def get_crypto_history(coin_id: str, interval: str = '1D'):
         "binancecoin": "BNB-USD",
         "polkadot": "DOT-USD",
         "chainlink": "LINK-USD",
-        "matic-network": "MATIC-USD",
+        "matic-network": "POL-USD",
         "tron": "TRX-USD"
     }
     symbol = coin_map.get(coin_id.lower(), f"{coin_id.upper()}-USD")
@@ -150,7 +150,7 @@ def get_crypto_signals(coin_id: str):
     coin_map = {
         "bitcoin": "BTC-USD", "ethereum": "ETH-USD", "solana": "SOL-USD",
         "ripple": "XRP-USD", "cardano": "ADA-USD", "avalanche": "AVAX-USD", "dogecoin": "DOGE-USD",
-        "binancecoin": "BNB-USD", "polkadot": "DOT-USD", "chainlink": "LINK-USD", "matic-network": "MATIC-USD", "tron": "TRX-USD"
+        "binancecoin": "BNB-USD", "polkadot": "DOT-USD", "chainlink": "LINK-USD", "matic-network": "POL-USD", "tron": "TRX-USD"
     }
     symbol = coin_map.get(coin_id.lower(), f"{coin_id.upper()}-USD")
     try:
@@ -175,7 +175,7 @@ def get_crypto_news(coin_id: str):
     coin_map = {
         "bitcoin": "BTC-USD", "ethereum": "ETH-USD", "solana": "SOL-USD",
         "ripple": "XRP-USD", "cardano": "ADA-USD", "avalanche": "AVAX-USD", "dogecoin": "DOGE-USD",
-        "binancecoin": "BNB-USD", "polkadot": "DOT-USD", "chainlink": "LINK-USD", "matic-network": "MATIC-USD", "tron": "TRX-USD"
+        "binancecoin": "BNB-USD", "polkadot": "DOT-USD", "chainlink": "LINK-USD", "matic-network": "POL-USD", "tron": "TRX-USD"
     }
     symbol = coin_map.get(coin_id.lower(), f"{coin_id.upper()}-USD")
     try:
