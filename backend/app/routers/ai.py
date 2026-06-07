@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import List, Dict, Optional
-from app.services.ai_service import get_chart_analysis, get_chatbot_response, summarize_news
+from app.services.ai_service import get_chart_analysis, get_chatbot_response, summarize_news, analyze_portfolio
 
 router = APIRouter(prefix="/api/ai", tags=["Yapay Zeka"])
 
@@ -21,6 +21,11 @@ class ChatMessageRequest(BaseModel):
 class NewsRequest(BaseModel):
     title: str
     content: Optional[str] = ""
+
+
+class PortfolioAnalysisRequest(BaseModel):
+    portfolio: List[Dict]
+    market_prices: Dict[str, float]
 
 
 @router.post("/analyze-chart")
@@ -45,3 +50,10 @@ def summarize_news_item(req: NewsRequest):
     """Bir haberi yatırımcı perspektifinden özetler."""
     summary = summarize_news(req.title, req.content)
     return {"summary": summary}
+
+
+@router.post("/analyze-portfolio")
+def analyze_portfolio_route(req: PortfolioAnalysisRequest):
+    """Kullanıcının portföyünü AI ile analiz eder."""
+    analysis = analyze_portfolio(req.portfolio, req.market_prices)
+    return {"analysis": analysis}

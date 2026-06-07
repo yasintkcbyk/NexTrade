@@ -30,3 +30,21 @@ class User(Base):
     created_at = Column(DateTime, server_default=func.now())
 
     alerts = relationship("Alert", back_populates="owner")
+    portfolio_items = relationship("PortfolioItem", back_populates="owner")
+
+
+class PortfolioItem(Base):
+    __tablename__ = "portfolio_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    symbol = Column(String, index=True)          # BTC, AAPL, vb.
+    asset_name = Column(String)                   # Bitcoin, Apple Inc., vb.
+    asset_type = Column(String)                   # "crypto" veya "stock"
+    quantity = Column(Float)                      # Miktar (adet)
+    buy_price = Column(Float)                     # Alış fiyatı (USD)
+    notes = Column(String, nullable=True)         # Opsiyonel not
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    owner = relationship("User", back_populates="portfolio_items")

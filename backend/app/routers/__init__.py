@@ -1,1 +1,1 @@
-from . import ai, alerts, crypto, stocks, market
+from . import ai, alerts, crypto, stocks, market, portfolio

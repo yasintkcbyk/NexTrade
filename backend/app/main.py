@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
-from app.routers import stocks, crypto, alerts, ai, market, auth, asset_info
+from app.routers import stocks, crypto, alerts, ai, market, auth, asset_info, portfolio
+
 from app.services.alert_checker import check_prices_periodically
 from app.database import engine, Base
 import app.models
@@ -39,6 +40,8 @@ app.include_router(alerts.router)
 app.include_router(ai.router)
 app.include_router(market.router)
 app.include_router(asset_info.router)
+app.include_router(portfolio.router)
+
 
 
 @app.on_event("startup")

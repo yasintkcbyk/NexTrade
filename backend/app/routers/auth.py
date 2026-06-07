@@ -3,20 +3,13 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from typing import Optional
-from app.database import SessionLocal
+from app.database import SessionLocal, get_db
 from app.models import User
 from app.utils.auth_utils import verify_password, get_password_hash, create_access_token, decode_token
 
 router = APIRouter(prefix="/api/auth", tags=["Kimlik Doğrulama"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 # --- Pydantic Şemaları ---
 class UserCreate(BaseModel):

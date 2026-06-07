@@ -139,3 +139,83 @@ Bu haberi yatırımcı perspektifinden değerlendir:
         return response.choices[0].message.content
     except Exception as e:
         return f"Özet oluşturulamadı: {str(e)}"
+
+
+def analyze_portfolio(portfolio_data: list, market_prices: dict) -> str:
+    """Kullanıcı portföyünü AI ile analiz eder ve kişiselleştirilmiş yorum üretir."""
+    if not client:
+        return "AI servisi şu an aktif değil (GROQ API Key eksik)."
+
+    if not portfolio_data:
+        return "Portföyünüz boş görünüyor. Önce varlık ekleyin."
+
+    try:
+        # Portföy özeti oluştur
+        total_cost = 0
+        total_value = 0
+        items_summary = []
+        
+        for item in portfolio_data:
+            symbol = item.get("symbol", "")
+            quantity = item.get("quantity", 0)
+            buy_price = item.get("buy_price", 0)
+            asset_type = item.get("asset_type", "")
+            asset_name = item.get("asset_name", symbol)
+            
+            current_price = market_prices.get(symbol, buy_price)
+            cost_basis = quantity * buy_price
+            current_val = quantity * current_price
+            pnl = current_val - cost_basis
+            pnl_pct = ((current_price - buy_price) / buy_price * 100) if buy_price > 0 else 0
+            
+            total_cost += cost_basis
+            total_value += current_val
+            
+            items_summary.append(
+                f"- {asset_name} ({symbol}, {asset_type}): "
+                f"{quantity} adet, Alış: ${buy_price:,.2f}, Güncel: ${current_price:,.2f}, "
+                f"P&L: ${pnl:,.2f} ({pnl_pct:+.2f}%)"
+            )
+        
+        total_pnl = total_value - total_cost
+        total_pnl_pct = ((total_value - total_cost) / total_cost * 100) if total_cost > 0 else 0
+        
+        # Varlık tipi dağılımı
+        crypto_items = [i for i in portfolio_data if i.get("asset_type") == "crypto"]
+        stock_items = [i for i in portfolio_data if i.get("asset_type") == "stock"]
+        crypto_val = sum(market_prices.get(i["symbol"], i["buy_price"]) * i["quantity"] for i in crypto_items)
+        stock_val = sum(market_prices.get(i["symbol"], i["buy_price"]) * i["quantity"] for i in stock_items)
+        crypto_pct = (crypto_val / total_value * 100) if total_value > 0 else 0
+        stock_pct = (stock_val / total_value * 100) if total_value > 0 else 0
+        
+        prompt = f"""Aşağıdaki yatırım portföyünü profesyonel bir analist gözüyle değerlendir:
+
+PORTFÖY ÖZETİ:
+- Toplam Maliyet: ${total_cost:,.2f}
+- Güncel Değer: ${total_value:,.2f}
+- Toplam Kar/Zarar: ${total_pnl:,.2f} ({total_pnl_pct:+.2f}%)
+- Kripto Oranı: %{crypto_pct:.1f}
+- Hisse Oranı: %{stock_pct:.1f}
+
+VARLIK DETAYLARI:
+{chr(10).join(items_summary)}
+
+Lütfen şunları analiz et:
+1. **Genel Performans**: Portföy nasıl gidiyor? Kâr mı zarar mı baskın?
+2. **Risk Analizi**: Diversifikasyon yeterli mi? Tek bir varlığa aşırı yoğunlaşma var mı?
+3. **Güçlü & Zayıf Noktalar**: Hangi varlıklar iyi performans gösteriyor, hangisi kötü?
+4. **Öneri**: Portföy optimizasyonu için 2-3 pratik öneri ver.
+
+Maksimum 5 paragraf, Türkçe. (Bu bir yatırım tavsiyesi değildir.)"""
+
+        response = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+            ],
+            model="llama-3.3-70b-versatile",
+            max_tokens=900,
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"Portföy analizi oluşturulamadı: {str(e)}"

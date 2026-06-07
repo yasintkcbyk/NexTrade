@@ -1,20 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.services.telegram_service import send_telegram_alert
-from app.database import SessionLocal
+from app.database import SessionLocal, get_db
 from app.models import Alert, User
 from app.routers.auth import get_current_user
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/alerts", tags=["Alerts"])
-
-# Veritabanı bağlantısı (Her istekte açılıp kapanır)
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 class AlertCreate(BaseModel):
     symbol: str
