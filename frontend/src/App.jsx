@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { TrendingUp, BarChart2, Newspaper, Bell, Calculator, LogOut, Wifi, Search, Wallet } from 'lucide-react';
+import { TrendingUp, BarChart2, Newspaper, Bell, Calculator, LogOut, Wifi, Search, Wallet, Moon, Sun } from 'lucide-react';
 import { useAppContext } from './context/AppContext';
 import { CURRENCIES, LANGUAGES } from './utils/constants';
 
 import TickerBand from './components/TickerBand';
 import AIChat from './components/AIChat';
-import AssetDetailModal from './components/AssetDetailModal';
 import LoginPage from './components/LoginPage';
 
 import MarketPage from './pages/MarketPage';
@@ -14,14 +13,24 @@ import NewsPage from './pages/NewsPage';
 import AlertsPage from './pages/AlertsPage';
 import ConverterPage from './pages/ConverterPage';
 import PortfolioPage from './pages/PortfolioPage';
+import AssetPage from './pages/AssetPage';
 
 function AppLayout() {
-  const { user, handleLogout, activeModule, marketData, currency, setCurrency, rates, lang, setLang, t, lastUpdated } = useAppContext();
+  const { user, handleLogout, activeModule, marketData, currency, setCurrency, rates, lang, setLang, t, theme, setTheme, lastUpdated } = useAppContext();
   
   // Navigation State & Selected Asset State for the App Layout level
   // Since we use React Router now, useLocation tells us where we are.
   const location = useLocation();
   const currentPath = location.pathname;
+
+  // Apply theme to document body to ensure modals are styled correctly
+  useEffect(() => {
+    if (theme === 'light') {
+      document.documentElement.classList.add('theme-light');
+    } else {
+      document.documentElement.classList.remove('theme-light');
+    }
+  }, [theme]);
 
   // We keep some global states here because MarketPage and AIChat share selectedAsset
   const [activeTab, setActiveTab] = useState('crypto');
@@ -117,10 +126,20 @@ function AppLayout() {
           </div>
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              style={{
+                background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)',
+                width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'var(--transition-fast)'
+              }}
+              title={theme === 'dark' ? 'Aydınlık Mod' : 'Karanlık Mod'}
+            >
+              {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+            </button>
             <select
               value={lang}
               onChange={e => setLang(e.target.value)}
-              style={{ padding: '6px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(13,21,38,0.8)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', outline: 'none', fontSize: 12, cursor: 'pointer', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 600 }}
+              style={{ padding: '6px 12px', borderRadius: 'var(--radius-full)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', outline: 'none', fontSize: 12, cursor: 'pointer', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 600 }}
             >
               {Object.keys(LANGUAGES).map(l => (
                 <option key={l} value={l}>{LANGUAGES[l].flag} {l}</option>
@@ -129,7 +148,7 @@ function AppLayout() {
             <select
               value={currency}
               onChange={e => setCurrency(e.target.value)}
-              style={{ padding: '6px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(13,21,38,0.8)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', outline: 'none', fontSize: 12, cursor: 'pointer', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 600 }}
+              style={{ padding: '6px 12px', borderRadius: 'var(--radius-full)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', outline: 'none', fontSize: 12, cursor: 'pointer', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 600 }}
             >
               {Object.keys(CURRENCIES).map(c => (
                 <option key={c} value={c}>{CURRENCIES[c].symbol} {c}</option>
@@ -145,29 +164,17 @@ function AppLayout() {
                 activeTab={activeTab} setActiveTab={setActiveTab} 
                 selectedAsset={selectedAsset} setSelectedAsset={setSelectedAsset} 
                 setSelectedForDetail={setSelectedForDetail} 
+                selectedForDetail={selectedForDetail}
               />
             } />
             <Route path="/portfolio" element={<PortfolioPage />} />
-            <Route path="/news" element={<NewsPage onSummarizeNews={handleSummarizeNews} />} />
+            <Route path="/news" element={<NewsPage />} />
             <Route path="/alerts" element={<AlertsPage />} />
             <Route path="/converter" element={<ConverterPage />} />
+            <Route path="/asset/:id" element={<AssetPage />} />
           </Routes>
         </div>
       </div>
-
-      {selectedForDetail && (
-        <AssetDetailModal
-          asset={selectedForDetail}
-          onClose={() => setSelectedForDetail(null)}
-          onSummarizeNews={(title) => {
-            setSelectedForDetail(null);
-            handleSummarizeNews(title);
-          }}
-          currency={currency}
-          rates={rates}
-          t={t}
-        />
-      )}
 
       <AIChat selectedAsset={selectedAsset} />
     </div>
@@ -175,12 +182,8 @@ function AppLayout() {
 }
 
 export default function App() {
-  const { user, handleLogin } = useAppContext();
-
-  if (!user) {
-    return <LoginPage onLogin={handleLogin} />;
-  }
-
+  const { user } = useAppContext();
+  if (!user) return <LoginPage />;
   return (
     <Router>
       <AppLayout />

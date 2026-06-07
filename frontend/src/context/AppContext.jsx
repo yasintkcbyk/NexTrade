@@ -19,6 +19,7 @@ export function AppProvider({ children }) {
   const [currency, setCurrency] = useState(() => localStorage.getItem('nt_currency') || 'USD');
   const [rates, setRates] = useState({ USD: 1, TRY: 32.5, GBP: 0.79, KZT: 445.0, RUB: 92.5 });
   const [lang, setLang] = useState(() => localStorage.getItem('nt_lang') || 'TR');
+  const [theme, setTheme] = useState(() => localStorage.getItem('nt_theme') || 'dark');
   const [lastUpdated, setLastUpdated] = useState(null);
 
   const t = useCallback((key) => TRANSLATIONS[lang]?.[key] || key, [lang]);
@@ -30,6 +31,10 @@ export function AppProvider({ children }) {
   useEffect(() => {
     localStorage.setItem('nt_lang', lang);
   }, [lang]);
+
+  useEffect(() => {
+    localStorage.setItem('nt_theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     localStorage.setItem('nextTrade_favorites', JSON.stringify(favorites));
@@ -81,6 +86,7 @@ export function AppProvider({ children }) {
     favorites, toggleFavorite,
     currency, setCurrency, rates,
     lang, setLang, t,
+    theme, setTheme,
     lastUpdated,
     API_BASE_URL
   };

@@ -87,11 +87,13 @@ def get_crypto_history(coin_id: str, interval: str = '1D'):
     Binance API erişim sorunları/kısıtlamalarını aşmak için yfinance kullanıyoruz.
     """
     interval_map = {
-        "1D": {"period": "7d", "interval": "1d"},
-        "1W": {"period": "7d", "interval": "1d"},
+        "1D": {"period": "5d", "interval": "15m"},
+        "1W": {"period": "7d", "interval": "1h"},
         "1M": {"period": "1mo", "interval": "1d"},
         "3M": {"period": "3mo", "interval": "1d"},
         "1Y": {"period": "1y", "interval": "1d"},
+        "4H": {"period": "1mo", "interval": "1h"},
+        "MAX": {"period": "max", "interval": "1wk"},
     }
     params = interval_map.get(interval, {"period": "1mo", "interval": "1d"})
 
@@ -120,7 +122,7 @@ def get_crypto_history(coin_id: str, interval: str = '1D'):
         chart_data = []
         for date, row in hist.iterrows():
             chart_data.append({
-                "time": date.strftime('%Y-%m-%d'),
+                "time": int(date.timestamp()),
                 "open": round(float(row['Open']), 2),
                 "high": round(float(row['High']), 2),
                 "low": round(float(row['Low']), 2),
@@ -133,11 +135,11 @@ def get_crypto_history(coin_id: str, interval: str = '1D'):
         chart_data = []
         base_price = 65000.0 if "btc" in symbol.lower() else 3000.0
         for i in range(30, -1, -1):
-            date = (datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d')
+            timestamp = int((datetime.now() - timedelta(days=i)).timestamp())
             open_price = base_price + random.uniform(-500, 500)
             close_price = open_price + random.uniform(-1000, 1000)
             chart_data.append({
-                "time": date,
+                "time": timestamp,
                 "open": round(open_price, 2),
                 "high": round(max(open_price, close_price) + random.uniform(0, 500), 2),
                 "low": round(min(open_price, close_price) - random.uniform(0, 500), 2),

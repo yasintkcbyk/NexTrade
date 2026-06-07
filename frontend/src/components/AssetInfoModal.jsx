@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { X, ExternalLink, Globe, Share2, Code2, TrendingUp, TrendingDown, Info, BarChart2, Newspaper, Sparkles, AlertCircle } from 'lucide-react';
+import { X, ExternalLink, Globe, Share2, Code2, TrendingUp, TrendingDown, Info, Newspaper, Sparkles, AlertCircle, Bot } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -230,7 +230,7 @@ function StockInfo({ info, currency, rates, t }) {
   );
 }
 
-export default function AssetDetailModal({ asset, onClose, onNavigateToChart, onSummarizeNews, currency, rates, t }) {
+export default function AssetInfoModal({ asset, onClose, onSummarizeNews, currency, rates, t }) {
   const [activeTab, setActiveTab] = useState('info');
   const [info, setInfo] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -331,6 +331,7 @@ export default function AssetDetailModal({ asset, onClose, onNavigateToChart, on
 
         {/* Content */}
         <div className="detail-content">
+
           {activeTab === 'info' && (
             loading ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 60, gap: 14, color: 'var(--text-muted)' }}>

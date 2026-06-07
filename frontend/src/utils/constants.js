@@ -1,3 +1,5 @@
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 export const FALLBACK_MARKET = [
   { id: 'bitcoin',   symbol: 'BTC',      name: 'Bitcoin',          price: 65430.50, change: 2.34,  high24h: 66000, low24h: 64000, type: 'crypto' },
   { id: 'ethereum',  symbol: 'ETH',      name: 'Ethereum',         price: 3450.75,  change: -1.20, high24h: 3500,  low24h: 3400,  type: 'crypto' },
@@ -64,7 +66,8 @@ export const TRANSLATIONS = {
     genesisDate: 'İlk Blok Tarihi', consensus: 'Konsensüs Mekanizması', categories: 'Kategoriler', staticDataWarning: 'Canlı veri alınamadı, statik bilgiler gösteriliyor.',
     sector: 'Sektör', industry: 'Endüstri', peRatio: 'F/K Oranı (PE)', eps: 'Hisse Başı Kâr (EPS)', dividendYield: 'Temettü Verimi',
     high52w: '52 Haftalık En Yüksek', low52w: '52 Haftalık En Düşük', employees: 'Çalışan Sayısı', beta: 'Beta', revenue: 'Gelir', profitMargin: 'Kâr Marjı',
-    generalInfo: 'Genel Bilgi', loadingInfo: 'Varlık bilgileri getiriliyor...', infoFetchFailed: 'Bilgi alınamadı', checkServer: 'Sunucu bağlantısını kontrol edin.', noNewsForAsset: 'için haber bulunamadı'
+    generalInfo: 'Genel Bilgi', loadingInfo: 'Varlık bilgileri getiriliyor...', infoFetchFailed: 'Bilgi alınamadı', checkServer: 'Sunucu bağlantısını kontrol edin.', noNewsForAsset: 'için haber bulunamadı',
+    time4h: '4S', timeMax: 'TÜMÜ', themeLight: 'Aydınlık Mod', themeDark: 'Karanlık Mod'
   },
   EN: {
     markets: 'Markets', news: 'News', alerts: 'Alerts', mainMenu: 'Main Menu', logout: 'Logout',
@@ -88,7 +91,8 @@ export const TRANSLATIONS = {
     genesisDate: 'Genesis Date', consensus: 'Consensus Mechanism', categories: 'Categories', staticDataWarning: 'Live data unavailable, showing static info.',
     sector: 'Sector', industry: 'Industry', peRatio: 'P/E Ratio', eps: 'Earnings Per Share (EPS)', dividendYield: 'Dividend Yield',
     high52w: '52-Week High', low52w: '52-Week Low', employees: 'Employees', beta: 'Beta', revenue: 'Revenue', profitMargin: 'Profit Margin',
-    generalInfo: 'General Info', loadingInfo: 'Fetching asset information...', infoFetchFailed: 'Failed to fetch info', checkServer: 'Check server connection.', noNewsForAsset: 'No news found for'
+    generalInfo: 'General Info', loadingInfo: 'Fetching asset information...', infoFetchFailed: 'Failed to fetch info', checkServer: 'Check server connection.', noNewsForAsset: 'No news found for',
+    time4h: '4H', timeMax: 'MAX', themeLight: 'Light Mode', themeDark: 'Dark Mode'
   },
   DE: {
     markets: 'Märkte', news: 'Nachrichten', alerts: 'Alarme', mainMenu: 'Hauptmenü', logout: 'Abmelden',
@@ -112,7 +116,8 @@ export const TRANSLATIONS = {
     genesisDate: 'Genesis-Datum', consensus: 'Konsensmechanismus', categories: 'Kategorien', staticDataWarning: 'Live-Daten nicht verfügbar, zeige statische Infos.',
     sector: 'Sektor', industry: 'Industrie', peRatio: 'KGV (PE)', eps: 'Gewinn pro Aktie (EPS)', dividendYield: 'Dividendenrendite',
     high52w: '52-Wochen-Hoch', low52w: '52-Wochen-Tief', employees: 'Mitarbeiter', beta: 'Beta', revenue: 'Einnahmen', profitMargin: 'Gewinnmarge',
-    generalInfo: 'Allgemeine Infos', loadingInfo: 'Anlageninformationen werden abgerufen...', infoFetchFailed: 'Informationen konnten nicht abgerufen werden', checkServer: 'Überprüfen Sie die Serververbindung.', noNewsForAsset: 'Keine Nachrichten gefunden für'
+    generalInfo: 'Allgemeine Infos', loadingInfo: 'Anlageninformationen werden abgerufen...', infoFetchFailed: 'Informationen konnten nicht abgerufen werden', checkServer: 'Überprüfen Sie die Serververbindung.', noNewsForAsset: 'Keine Nachrichten gefunden für',
+    time4h: '4S', timeMax: 'MAX', themeLight: 'Heller Modus', themeDark: 'Dunkler Modus'
   },
   RU: {
     markets: 'Рынки', news: 'Новости', alerts: 'Оповещения', mainMenu: 'Главное меню', logout: 'Выйти',
@@ -136,17 +141,15 @@ export const TRANSLATIONS = {
     genesisDate: 'Дата создания', consensus: 'Механизм консенсуса', categories: 'Категории', staticDataWarning: 'Данные в реальном времени недоступны, показана статическая информация.',
     sector: 'Сектор', industry: 'Отрасль', peRatio: 'Отношение P/E', eps: 'Прибыль на акцию (EPS)', dividendYield: 'Дивидендная доходность',
     high52w: '52-недельный максимум', low52w: '52-недельный минимум', employees: 'Сотрудники', beta: 'Бета', revenue: 'Доход', profitMargin: 'Маржа прибыли',
-    generalInfo: 'Общая информация', loadingInfo: 'Получение информации об активе...', infoFetchFailed: 'Не удалось получить информацию', checkServer: 'Проверьте соединение с сервером.', noNewsForAsset: 'Нет новостей для'
+    generalInfo: 'Общая информация', loadingInfo: 'Получение информации об активе...', infoFetchFailed: 'Не удалось получить информацию', checkServer: 'Проверьте соединение с сервером.', noNewsForAsset: 'Нет новостей для',
+    time4h: '4Ч', timeMax: 'МАКС', themeLight: 'Светлая тема', themeDark: 'Темная тема'
   }
 };
 
 export function formatPrice(price, currency = 'USD', rates = { USD: 1 }) {
   if (!price && price !== 0) return '—';
   const rate = rates[currency] || 1;
-  const converted = price * rate;
-  if (converted >= 1000) return converted.toLocaleString(CURRENCIES[currency].locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  if (converted >= 1)    return converted.toFixed(2);
-  return converted.toFixed(6);
+  const convertedPrice = price * rate;
+  const symbol = CURRENCIES[currency]?.symbol || '$';
+  return `${symbol}${convertedPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
-
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';

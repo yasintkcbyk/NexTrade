@@ -35,11 +35,13 @@ def get_stock_data(symbol: str):
 def get_stock_history(symbol: str, interval: str = '1d'):
     # Kullanıcı dostu zaman aralıklarını yfinance parametrelerine çevir
     interval_map = {
-        "1Y": {"period": "1y", "interval": "1d"},
-        "3M": {"period": "3mo", "interval": "1d"},
-        "1M": {"period": "1mo", "interval": "1h"},
-        "1W": {"period": "7d", "interval": "1d"},
         "1D": {"period": "5d", "interval": "15m"},
+        "1W": {"period": "7d", "interval": "1h"},
+        "1M": {"period": "1mo", "interval": "1d"},
+        "3M": {"period": "3mo", "interval": "1d"},
+        "1Y": {"period": "1y", "interval": "1d"},
+        "4H": {"period": "1mo", "interval": "1h"},
+        "MAX": {"period": "max", "interval": "1wk"},
     }
     params = interval_map.get(interval, {"period": "1mo", "interval": "1d"})
 
@@ -52,7 +54,7 @@ def get_stock_history(symbol: str, interval: str = '1d'):
         chart_data = []
         for date, row in hist.iterrows():
             chart_data.append({
-                "time": date.strftime('%Y-%m-%d'),
+                "time": int(date.timestamp()),
                 "open": round(float(row['Open']), 2),
                 "high": round(float(row['High']), 2),
                 "low": round(float(row['Low']), 2),
