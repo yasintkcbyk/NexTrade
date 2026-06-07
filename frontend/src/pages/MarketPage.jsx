@@ -67,6 +67,10 @@ export default function MarketPage({ activeTab, setActiveTab, selectedAsset, set
     }
   };
 
+  const handleSummarizeNews = (newsTitle) => {
+    window.dispatchEvent(new CustomEvent('nt-summarize-news', { detail: { title: newsTitle } }));
+  };
+
   if (!selectedAsset) return null;
 
   return (

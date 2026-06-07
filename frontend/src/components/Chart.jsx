@@ -36,21 +36,19 @@ export default function Chart({ data, signals = [] }) {
       },
       crosshair: {
         mode: CrosshairMode.Normal,
-        vertLine: { color: 'rgba(0,212,255,0.4)', labelBackgroundColor: '#162040' },
-        horzLine: { color: 'rgba(0,212,255,0.4)', labelBackgroundColor: '#162040' },
+        vertLine: { color: 'rgba(100,116,139,0.5)', labelBackgroundColor: '#1e293b', style: LineStyle.Dotted, width: 1 },
+        horzLine: { color: 'rgba(100,116,139,0.5)', labelBackgroundColor: '#1e293b', style: LineStyle.Dotted, width: 1 },
       },
       rightPriceScale: {
         borderColor: 'rgba(99,179,237,0.1)',
         textColor: '#8ba4c8',
+        autoScale: true,
       },
       timeScale: {
         borderColor: 'rgba(99,179,237,0.1)',
         timeVisible: true,
         secondsVisible: false,
-        tickMarkFormatter: (time) => {
-          const d = new Date(time * 1000);
-          return `${d.getDate()}/${d.getMonth() + 1}`;
-        },
+        rightOffset: 12, // Binancedeki gibi sağda boşluk bırakır
       },
       handleScale: { mouseWheel: true, pinch: true },
       handleScroll: { mouseWheel: true, pressedMouseMove: true },
@@ -60,12 +58,12 @@ export default function Chart({ data, signals = [] }) {
 
     // Candlestick serisi
     const candleSeries = chart.addCandlestickSeries({
-      upColor:          '#10b981',
-      downColor:        '#f43f5e',
-      borderUpColor:    '#10b981',
-      borderDownColor:  '#f43f5e',
-      wickUpColor:      '#10b981',
-      wickDownColor:    '#f43f5e',
+      upColor:          '#0ecb81', // Binance green
+      downColor:        '#f6465d', // Binance red
+      borderUpColor:    '#0ecb81',
+      borderDownColor:  '#f6465d',
+      wickUpColor:      '#0ecb81',
+      wickDownColor:    '#f6465d',
     });
 
     // Mum verilerini normalize et
@@ -104,7 +102,7 @@ export default function Chart({ data, signals = [] }) {
       const volumeSeries = chart.addHistogramSeries({
         color: '#4488ff',
         priceFormat: { type: 'volume' },
-        priceScaleId: 'volume',
+        priceScaleId: '', // Attach to overlay
         scaleMargins: { top: 0.85, bottom: 0 },
       });
 

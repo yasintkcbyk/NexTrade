@@ -74,11 +74,28 @@ export function AppProvider({ children }) {
 
   const handleLogin = (userData) => setUser(userData);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     localStorage.removeItem('nt_token');
     localStorage.removeItem('nt_user');
     setUser(null);
-  };
+  }, []);
+
+  // Axios interceptor for handling 401 Unauthorized errors globally
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response && error.response.status === 401) {
+          console.warn("401 Unauthorized intercepted. Logging out...");
+          handleLogout();
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, [handleLogout]);
 
   const value = {
     user, setUser, handleLogin, handleLogout,

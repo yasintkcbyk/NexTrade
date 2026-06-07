@@ -26,6 +26,15 @@ export const FALLBACK_MARKET = [
   { id: 'KCHOL.IS',  symbol: 'KCHOL',    name: 'Koç Holding',      price: 215.50,   change: 1.80,  high24h: 220,   low24h: 210,   type: 'stock' },
   { id: 'ASELS.IS',  symbol: 'ASELS',    name: 'Aselsan',          price: 63.40,    change: -1.20, high24h: 65,    low24h: 62,    type: 'stock' },
   { id: 'TUPRS.IS',  symbol: 'TUPRS',    name: 'Tüpraş',           price: 177.20,   change: 0.90,  high24h: 180,   low24h: 175,   type: 'stock' },
+  { id: 'shiba-inu', symbol: 'SHIB',     name: 'Shiba Inu',        price: 0.000025, change: 5.20,  high24h: 0.000027, low24h: 0.000023, type: 'crypto' },
+  { id: 'litecoin',  symbol: 'LTC',      name: 'Litecoin',         price: 85.50,    change: 1.50,  high24h: 87.00, low24h: 84.00, type: 'crypto' },
+  { id: 'the-open-network', symbol: 'TON', name: 'Toncoin',        price: 6.80,     change: -2.30, high24h: 7.10,  low24h: 6.50,  type: 'crypto' },
+  { id: 'uniswap',   symbol: 'UNI',      name: 'Uniswap',          price: 10.20,    change: 4.10,  high24h: 10.50, low24h: 9.80,  type: 'crypto' },
+  { id: 'V',         symbol: 'V',        name: 'Visa Inc.',        price: 275.40,   change: 0.50,  high24h: 278,   low24h: 273,   type: 'stock' },
+  { id: 'JPM',       symbol: 'JPM',      name: 'JPMorgan Chase',   price: 195.80,   change: 1.20,  high24h: 198,   low24h: 194,   type: 'stock' },
+  { id: 'SBUX',      symbol: 'SBUX',     name: 'Starbucks',        price: 85.20,    change: -0.80, high24h: 87,    low24h: 84,    type: 'stock' },
+  { id: 'TCELL.IS',  symbol: 'TCELL',    name: 'Turkcell',         price: 85.60,    change: 2.10,  high24h: 87,    low24h: 84,    type: 'stock' },
+  { id: 'BIMAS.IS',  symbol: 'BIMAS',    name: 'BİM',              price: 395.00,   change: 1.50,  high24h: 400,   low24h: 390,   type: 'stock' }
 ];
 
 export const CURRENCIES = {

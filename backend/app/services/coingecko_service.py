@@ -25,7 +25,11 @@ def get_crypto_data(coin_id: str):
         "polkadot": "DOT",
         "chainlink": "LINK",
         "matic-network": "POL",
-        "tron": "TRX"
+        "tron": "TRX",
+        "shiba-inu": "SHIB",
+        "litecoin": "LTC",
+        "the-open-network": "TON",
+        "uniswap": "UNI"
     }
     
     symbol = coin_map.get(coin_id.lower(), coin_id.upper())
@@ -83,55 +87,64 @@ def get_crypto_data(coin_id: str):
 
 def get_crypto_history(coin_id: str, interval: str = '1D'):
     """
-    Yahoo Finance (yfinance) üzerinden geçmiş mum verilerini çeker.
-    Binance API erişim sorunları/kısıtlamalarını aşmak için yfinance kullanıyoruz.
+    Binance API üzerinden geçmiş mum (kline) verilerini çeker.
+    yfinance'in aksine kripto paralar için 7/24 kesintisiz, çok daha hızlı ve 
+    gerçek 4 Saatlik (4h) gibi teknik analiz mumlarını doğrudan sağlar.
     """
+    # Frontend'den gelen buton değerlerini Binance mum (interval) formatına çeviriyoruz.
     interval_map = {
-        "1D": {"period": "5d", "interval": "15m"},
-        "1W": {"period": "7d", "interval": "1h"},
-        "1M": {"period": "1mo", "interval": "1d"},
-        "3M": {"period": "3mo", "interval": "1d"},
-        "1Y": {"period": "1y", "interval": "1d"},
-        "4H": {"period": "1mo", "interval": "1h"},
-        "MAX": {"period": "max", "interval": "1wk"},
+        "1D": {"interval": "15m", "limit": 96},       # Son 1 Gün (15 dakikalık mumlar)
+        "1W": {"interval": "1h", "limit": 168},       # Son 1 Hafta (1 saatlik mumlar)
+        "1M": {"interval": "4h", "limit": 180},       # Son 1 Ay (4 saatlik mumlar)
+        "3M": {"interval": "12h", "limit": 180},      # Son 3 Ay (12 saatlik mumlar)
+        "1Y": {"interval": "1d", "limit": 365},       # Son 1 Yıl (Günlük mumlar)
+        "4H": {"interval": "4h", "limit": 300},       # GERÇEK 4 Saatlik Mumlar (Geriye dönük 300 mum)
+        "MAX": {"interval": "1w", "limit": 1000},     # Haftalık mumlar (Maksimum geçmiş)
     }
-    params = interval_map.get(interval, {"period": "1mo", "interval": "1d"})
+    params = interval_map.get(interval, {"interval": "1d", "limit": 300})
 
+    # Coin ID'yi Binance formatına (örn: BTCUSDT) çeviriyoruz
     coin_map = {
-        "bitcoin": "BTC-USD",
-        "ethereum": "ETH-USD",
-        "solana": "SOL-USD",
-        "ripple": "XRP-USD",
-        "cardano": "ADA-USD",
-        "avalanche": "AVAX-USD",
-        "dogecoin": "DOGE-USD",
-        "binancecoin": "BNB-USD",
-        "polkadot": "DOT-USD",
-        "chainlink": "LINK-USD",
-        "matic-network": "POL-USD",
-        "tron": "TRX-USD"
+        "bitcoin": "BTC", "ethereum": "ETH", "solana": "SOL", "ripple": "XRP",
+        "cardano": "ADA", "avalanche": "AVAX", "dogecoin": "DOGE", "binancecoin": "BNB",
+        "polkadot": "DOT", "chainlink": "LINK", "matic-network": "POL", "tron": "TRX",
+        "shiba-inu": "SHIB", "litecoin": "LTC", "the-open-network": "TON", "uniswap": "UNI"
     }
-    symbol = coin_map.get(coin_id.lower(), f"{coin_id.upper()}-USD")
+    base_symbol = coin_map.get(coin_id.lower(), coin_id.upper())
+    symbol = f"{base_symbol}USDT"
     
     try:
-        ticker = yf.Ticker(symbol)
-        hist = ticker.history(period=params["period"], interval=params["interval"])
-        if hist.empty:
-            raise ValueError(f"yfinance boş veri döndürdü ({symbol}).")
+        url = "https://api.binance.com/api/v3/klines"
+        response = requests.get(url, params={
+            "symbol": symbol,
+            "interval": params["interval"],
+            "limit": params["limit"]
+        }, timeout=10)
+        
+        if response.status_code != 200:
+            raise ValueError(f"Binance API hatası: {response.text}")
+            
+        klines = response.json()
+        if not klines:
+            raise ValueError(f"Binance boş veri döndürdü ({symbol}).")
             
         chart_data = []
-        for date, row in hist.iterrows():
+        for k in klines:
+            # Binance klines format:
+            # [0] Open time, [1] Open, [2] High, [3] Low, [4] Close, [5] Volume
             chart_data.append({
-                "time": int(date.timestamp()),
-                "open": round(float(row['Open']), 2),
-                "high": round(float(row['High']), 2),
-                "low": round(float(row['Low']), 2),
-                "close": round(float(row['Close']), 2)
+                "time": int(k[0] / 1000), # Saniyeye çeviriyoruz
+                "open": float(k[1]),
+                "high": float(k[2]),
+                "low": float(k[3]),
+                "close": float(k[4]),
+                "volume": float(k[5])
             })
         return chart_data
     except Exception as e:
-        print(f"Kripto geçmişi çekilemedi ({coin_id}): {e}")
-        # Hata durumunda uygulamanın çökmemesi için varsayılan (dummy) grafik verisi döndürüyoruz
+        print(f"Binance geçmişi çekilemedi ({coin_id}): {e}")
+        # Fallback: Eğer Binance USDT çiftini bulamazsa (çok nadir, belki POL gibi yeni coinler)
+        # Hata fırlatmak yerine boş döndürebilir veya eski dummy veriyi dönebiliriz.
         chart_data = []
         base_price = 65000.0 if "btc" in symbol.lower() else 3000.0
         for i in range(30, -1, -1):
@@ -143,16 +156,18 @@ def get_crypto_history(coin_id: str, interval: str = '1D'):
                 "open": round(open_price, 2),
                 "high": round(max(open_price, close_price) + random.uniform(0, 500), 2),
                 "low": round(min(open_price, close_price) - random.uniform(0, 500), 2),
-                "close": round(close_price, 2)
+                "close": round(close_price, 2),
+                "volume": random.uniform(100, 5000)
             })
-            base_price = close_price  # Bir sonraki günün açılışı, bugünün kapanışına yakın olsun
+            base_price = close_price
         return chart_data
 
 def get_crypto_signals(coin_id: str):
     coin_map = {
         "bitcoin": "BTC-USD", "ethereum": "ETH-USD", "solana": "SOL-USD",
         "ripple": "XRP-USD", "cardano": "ADA-USD", "avalanche": "AVAX-USD", "dogecoin": "DOGE-USD",
-        "binancecoin": "BNB-USD", "polkadot": "DOT-USD", "chainlink": "LINK-USD", "matic-network": "POL-USD", "tron": "TRX-USD"
+        "binancecoin": "BNB-USD", "polkadot": "DOT-USD", "chainlink": "LINK-USD", "matic-network": "POL-USD", "tron": "TRX-USD",
+        "shiba-inu": "SHIB-USD", "litecoin": "LTC-USD", "the-open-network": "TON-USD", "uniswap": "UNI-USD"
     }
     symbol = coin_map.get(coin_id.lower(), f"{coin_id.upper()}-USD")
     try:
@@ -177,7 +192,8 @@ def get_crypto_news(coin_id: str):
     coin_map = {
         "bitcoin": "BTC-USD", "ethereum": "ETH-USD", "solana": "SOL-USD",
         "ripple": "XRP-USD", "cardano": "ADA-USD", "avalanche": "AVAX-USD", "dogecoin": "DOGE-USD",
-        "binancecoin": "BNB-USD", "polkadot": "DOT-USD", "chainlink": "LINK-USD", "matic-network": "POL-USD", "tron": "TRX-USD"
+        "binancecoin": "BNB-USD", "polkadot": "DOT-USD", "chainlink": "LINK-USD", "matic-network": "POL-USD", "tron": "TRX-USD",
+        "shiba-inu": "SHIB-USD", "litecoin": "LTC-USD", "the-open-network": "TON-USD", "uniswap": "UNI-USD"
     }
     symbol = coin_map.get(coin_id.lower(), f"{coin_id.upper()}-USD")
     try:
