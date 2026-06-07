@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
+from datetime import datetime
 from app.database import get_db
 from app.models import PortfolioItem, User
 from app.routers.auth import get_current_user
@@ -34,7 +35,7 @@ class PortfolioItemOut(BaseModel):
     quantity: float
     buy_price: float
     notes: Optional[str]
-    created_at: Optional[str] = None
+    created_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True

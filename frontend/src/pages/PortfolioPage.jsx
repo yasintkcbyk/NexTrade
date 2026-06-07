@@ -15,6 +15,8 @@ function AddAssetModal({ onClose, onAdd, marketData }) {
   const [buyPrice, setBuyPrice] = useState('');
   const [notes, setNotes] = useState('');
   const [step, setStep] = useState(1); // 1=asset select, 2=amount fill
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const filtered = useMemo(() => {
     if (!search) return marketData;
@@ -28,17 +30,25 @@ function AddAssetModal({ onClose, onAdd, marketData }) {
     setStep(2);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedAsset || !quantity || !buyPrice) return;
-    onAdd({
-      symbol: selectedAsset.symbol,
-      asset_name: selectedAsset.name,
-      asset_type: selectedAsset.type,
-      quantity: parseFloat(quantity),
-      buy_price: parseFloat(buyPrice),
-      notes: notes || null,
-    });
+    setSubmitting(true);
+    setError('');
+    try {
+      await onAdd({
+        symbol: selectedAsset.symbol,
+        asset_name: selectedAsset.name,
+        asset_type: selectedAsset.type,
+        quantity: parseFloat(quantity),
+        buy_price: parseFloat(buyPrice),
+        notes: notes || null,
+      });
+    } catch (err) {
+      setError(err?.response?.data?.detail || 'Bir hata oluştu. Backend bağlantısını kontrol edin.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -151,10 +161,20 @@ function AddAssetModal({ onClose, onAdd, marketData }) {
               />
             </div>
 
-            <button type="submit" disabled={!quantity || !buyPrice}
-              style={{ padding: '13px', borderRadius: 'var(--radius-md)', background: !quantity || !buyPrice ? 'rgba(68,136,255,0.3)' : 'linear-gradient(135deg, #4488ff, #a855f7)', color: 'white', border: 'none', cursor: !quantity || !buyPrice ? 'not-allowed' : 'pointer', fontSize: 14, fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+            {error && (
+              <div style={{ padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)', fontSize: 12, color: 'var(--accent-red)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                ⚠️ {error}
+              </div>
+            )}
+
+            <button type="submit" disabled={!quantity || !buyPrice || submitting}
+              style={{ padding: '13px', borderRadius: 'var(--radius-md)', background: (!quantity || !buyPrice || submitting) ? 'rgba(68,136,255,0.3)' : 'linear-gradient(135deg, #4488ff, #a855f7)', color: 'white', border: 'none', cursor: (!quantity || !buyPrice || submitting) ? 'not-allowed' : 'pointer', fontSize: 14, fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
             >
-              <Plus size={15} /> Portföye Ekle
+              {submitting ? (
+                <><div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> Ekleniyor...</>
+              ) : (
+                <><Plus size={15} /> Portföye Ekle</>
+              )}
             </button>
           </form>
         )}
@@ -222,12 +242,13 @@ export default function PortfolioPage() {
   useEffect(() => { fetchPortfolio(); }, []);
 
   const handleAdd = async (itemData) => {
-    try {
-      await axios.post(`${API_BASE_URL}/api/portfolio/`, itemData, getAuthHeaders());
-      setShowAddModal(false);
-      fetchPortfolio();
-    } catch (e) { console.error(e); }
+    // throws on error so the modal can display the message
+    await axios.post(`${API_BASE_URL}/api/portfolio/`, itemData, getAuthHeaders());
+    setShowAddModal(false);
+    await fetchPortfolio();
   };
+
+
 
   const handleDelete = async (id) => {
     try { await axios.delete(`${API_BASE_URL}/api/portfolio/${id}`, getAuthHeaders()); fetchPortfolio(); }
