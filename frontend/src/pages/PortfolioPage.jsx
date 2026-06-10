@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import {
   Wallet, Plus, Trash2, Sparkles, TrendingUp, TrendingDown,
-  X, PieChart, DollarSign, BarChart3, AlertCircle, ChevronDown, Search
+  X, PieChart, DollarSign, BarChart3, AlertCircle, ChevronDown, Search, Download
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { CURRENCIES, formatPrice } from '../utils/constants';
@@ -92,7 +92,7 @@ function AddAssetModal({ onClose, onAdd, marketData }) {
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(68,136,255,0.06)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: asset.type === 'crypto' ? 'rgba(0,212,255,0.12)' : 'rgba(68,136,255,0.12)', border: `1px solid ${asset.type === 'crypto' ? 'rgba(0,212,255,0.25)' : 'rgba(68,136,255,0.25)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 12, color: asset.type === 'crypto' ? 'var(--accent-cyan)' : 'var(--accent-blue)', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: asset.type === 'crypto' ? 'rgba(0,212,255,0.12)' : asset.type === 'stock' ? 'rgba(68,136,255,0.12)' : 'rgba(234,179,8,0.12)', border: `1px solid ${asset.type === 'crypto' ? 'rgba(0,212,255,0.25)' : asset.type === 'stock' ? 'rgba(68,136,255,0.25)' : 'rgba(234,179,8,0.25)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 12, color: asset.type === 'crypto' ? 'var(--accent-cyan)' : asset.type === 'stock' ? 'var(--accent-blue)' : '#eab308', fontFamily: 'Space Grotesk, sans-serif', flexShrink: 0 }}>
                     {asset.symbol.slice(0, 3)}
                   </div>
                   <div style={{ flex: 1, textAlign: 'left' }}>
@@ -101,8 +101,8 @@ function AddAssetModal({ onClose, onAdd, marketData }) {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: 13, fontWeight: 600, fontFamily: 'JetBrains Mono, monospace', color: 'var(--text-primary)' }}>${asset.price?.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-                    <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 'var(--radius-full)', background: asset.type === 'crypto' ? 'rgba(0,212,255,0.1)' : 'rgba(68,136,255,0.1)', color: asset.type === 'crypto' ? 'var(--accent-cyan)' : 'var(--accent-blue)', fontWeight: 700 }}>
-                      {asset.type === 'crypto' ? 'Kripto' : 'Hisse'}
+                    <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 'var(--radius-full)', background: asset.type === 'crypto' ? 'rgba(0,212,255,0.1)' : asset.type === 'stock' ? 'rgba(68,136,255,0.1)' : 'rgba(234,179,8,0.1)', color: asset.type === 'crypto' ? 'var(--accent-cyan)' : asset.type === 'stock' ? 'var(--accent-blue)' : '#eab308', fontWeight: 700 }}>
+                      {asset.type === 'crypto' ? 'Kripto' : asset.type === 'stock' ? 'Hisse' : 'Maden'}
                     </span>
                   </div>
                 </button>
@@ -228,12 +228,10 @@ export default function PortfolioPage() {
   const [aiAnalysis, setAiAnalysis] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
 
-  const getAuthHeaders = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('nt_token')}` } });
-
   const fetchPortfolio = async () => {
     setLoading(true);
     try {
-      const r = await axios.get(`${API_BASE_URL}/api/portfolio/`, getAuthHeaders());
+      const r = await axios.get(`${API_BASE_URL}/api/portfolio/`);
       setPortfolio(r.data || []);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
@@ -243,7 +241,7 @@ export default function PortfolioPage() {
 
   const handleAdd = async (itemData) => {
     // throws on error so the modal can display the message
-    await axios.post(`${API_BASE_URL}/api/portfolio/`, itemData, getAuthHeaders());
+    await axios.post(`${API_BASE_URL}/api/portfolio/`, itemData);
     setShowAddModal(false);
     await fetchPortfolio();
   };
@@ -251,7 +249,7 @@ export default function PortfolioPage() {
 
 
   const handleDelete = async (id) => {
-    try { await axios.delete(`${API_BASE_URL}/api/portfolio/${id}`, getAuthHeaders()); fetchPortfolio(); }
+    try { await axios.delete(`${API_BASE_URL}/api/portfolio/${id}`); fetchPortfolio(); }
     catch (e) { console.error(e); }
   };
 
@@ -274,6 +272,34 @@ export default function PortfolioPage() {
     finally { setAiLoading(false); }
   };
 
+  const handleExportCSV = () => {
+    if (!portfolio.length) return;
+    const headers = ['Varlik', 'Ad', 'Tur', 'Miktar', 'Alis Fiyati', 'Guncel Fiyat', 'Kar/Zarar', 'Yuzde'];
+    const rows = portfolio.map(item => {
+      const currentPrice = marketData.find(m => m.symbol === item.symbol)?.price ?? item.buy_price;
+      const pnl = (item.quantity * currentPrice) - (item.quantity * item.buy_price);
+      const pnlPct = item.buy_price > 0 ? ((currentPrice - item.buy_price) / item.buy_price) * 100 : 0;
+      return [
+        item.symbol,
+        item.asset_name.replace(/,/g, ''),
+        item.asset_type,
+        item.quantity,
+        item.buy_price,
+        currentPrice,
+        pnl.toFixed(2),
+        pnlPct.toFixed(2) + '%'
+      ].join(',');
+    });
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `nextTrade_portfolio_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // ─── Portfolio Calculations ──────────────────────────────────
   const portfolioStats = useMemo(() => {
     if (!portfolio.length) return null;
@@ -293,8 +319,9 @@ export default function PortfolioPage() {
 
     const cryptoVal = items.filter(i => i.asset_type === 'crypto').reduce((s, i) => s + i.value, 0);
     const stockVal = items.filter(i => i.asset_type === 'stock').reduce((s, i) => s + i.value, 0);
+    const metalVal = items.filter(i => i.asset_type === 'metal').reduce((s, i) => s + i.value, 0);
 
-    return { items, totalCost, totalValue, totalPnl, totalPnlPct, cryptoVal, stockVal };
+    return { items, totalCost, totalValue, totalPnl, totalPnlPct, cryptoVal, stockVal, metalVal };
   }, [portfolio, marketData]);
 
   const displayRate = rates[currency] || 1;
@@ -321,6 +348,15 @@ export default function PortfolioPage() {
               onMouseLeave={e => { e.currentTarget.style.background = 'rgba(168,85,247,0.12)'; e.currentTarget.style.boxShadow = 'none'; }}
             >
               <Sparkles size={15} /> AI Analiz
+            </button>
+          )}
+          {portfolio.length > 0 && (
+            <button onClick={handleExportCSV}
+              style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', background: 'rgba(68,136,255,0.12)', border: '1px solid rgba(68,136,255,0.25)', borderRadius: 'var(--radius-md)', color: 'var(--accent-blue)', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'Space Grotesk, sans-serif', transition: 'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(68,136,255,0.22)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(68,136,255,0.12)'; }}
+            >
+              <Download size={15} /> CSV İndir
             </button>
           )}
           <button onClick={() => setShowAddModal(true)}
@@ -364,7 +400,7 @@ export default function PortfolioPage() {
               { label: 'Toplam Değer', value: `${currSym}${(portfolioStats.totalValue * displayRate).toLocaleString(undefined, { maximumFractionDigits: 2 })}`, icon: <DollarSign size={18} />, color: 'var(--accent-blue)', bg: 'rgba(68,136,255,0.1)', border: 'rgba(68,136,255,0.2)' },
               { label: 'Toplam Maliyet', value: `${currSym}${(portfolioStats.totalCost * displayRate).toLocaleString(undefined, { maximumFractionDigits: 2 })}`, icon: <BarChart3 size={18} />, color: 'var(--text-secondary)', bg: 'rgba(255,255,255,0.04)', border: 'var(--border-subtle)' },
               { label: 'Kar / Zarar', value: `${portfolioStats.totalPnl >= 0 ? '+' : ''}${currSym}${(portfolioStats.totalPnl * displayRate).toLocaleString(undefined, { maximumFractionDigits: 2 })}`, sub: `${portfolioStats.totalPnlPct >= 0 ? '+' : ''}${portfolioStats.totalPnlPct.toFixed(2)}%`, icon: portfolioStats.totalPnl >= 0 ? <TrendingUp size={18} /> : <TrendingDown size={18} />, color: portfolioStats.totalPnl >= 0 ? 'var(--accent-green)' : 'var(--accent-red)', bg: portfolioStats.totalPnl >= 0 ? 'rgba(16,185,129,0.08)' : 'rgba(244,63,94,0.08)', border: portfolioStats.totalPnl >= 0 ? 'rgba(16,185,129,0.2)' : 'rgba(244,63,94,0.2)' },
-              { label: 'Varlık Sayısı', value: portfolio.length, sub: `${portfolioStats.cryptoVal > 0 && portfolioStats.stockVal > 0 ? 'Kripto + Hisse' : portfolioStats.cryptoVal > 0 ? 'Kripto' : 'Hisse'}`, icon: <Wallet size={18} />, color: 'var(--accent-purple)', bg: 'rgba(168,85,247,0.1)', border: 'rgba(168,85,247,0.2)' },
+              { label: 'Varlık Sayısı', value: portfolio.length, sub: `${portfolioStats.cryptoVal > 0 ? 'Kripto ' : ''}${portfolioStats.stockVal > 0 ? 'Hisse ' : ''}${portfolioStats.metalVal > 0 ? 'Maden ' : ''}`.trim().replace(/ /g, ' + ') || 'Portföy', icon: <Wallet size={18} />, color: 'var(--accent-purple)', bg: 'rgba(168,85,247,0.1)', border: 'rgba(168,85,247,0.2)' },
             ].map((card, i) => (
               <div key={i} style={{ padding: '18px 20px', borderRadius: 'var(--radius-lg)', background: card.bg, border: `1px solid ${card.border}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, color: card.color }}>
@@ -378,18 +414,20 @@ export default function PortfolioPage() {
           </div>
 
           {/* Allocation bar */}
-          {portfolioStats.totalValue > 0 && (portfolioStats.cryptoVal > 0 || portfolioStats.stockVal > 0) && (
+          {portfolioStats.totalValue > 0 && (portfolioStats.cryptoVal > 0 || portfolioStats.stockVal > 0 || portfolioStats.metalVal > 0) && (
             <div style={{ marginBottom: 24, padding: '16px 20px', borderRadius: 'var(--radius-lg)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>Dağılım</span>
                 <div style={{ display: 'flex', gap: 16 }}>
-                  <span style={{ fontSize: 11, color: 'var(--accent-cyan)' }}>₿ Kripto {((portfolioStats.cryptoVal / portfolioStats.totalValue) * 100).toFixed(1)}%</span>
-                  <span style={{ fontSize: 11, color: 'var(--accent-blue)' }}>📈 Hisse {((portfolioStats.stockVal / portfolioStats.totalValue) * 100).toFixed(1)}%</span>
+                  {portfolioStats.cryptoVal > 0 && <span style={{ fontSize: 11, color: 'var(--accent-cyan)' }}>₿ Kripto {((portfolioStats.cryptoVal / portfolioStats.totalValue) * 100).toFixed(1)}%</span>}
+                  {portfolioStats.stockVal > 0 && <span style={{ fontSize: 11, color: 'var(--accent-blue)' }}>📈 Hisse {((portfolioStats.stockVal / portfolioStats.totalValue) * 100).toFixed(1)}%</span>}
+                  {portfolioStats.metalVal > 0 && <span style={{ fontSize: 11, color: '#eab308' }}>✨ Maden {((portfolioStats.metalVal / portfolioStats.totalValue) * 100).toFixed(1)}%</span>}
                 </div>
               </div>
               <div style={{ height: 8, borderRadius: 'var(--radius-full)', background: 'rgba(255,255,255,0.05)', overflow: 'hidden', display: 'flex' }}>
                 <div style={{ width: `${(portfolioStats.cryptoVal / portfolioStats.totalValue) * 100}%`, background: 'linear-gradient(90deg, var(--accent-cyan), #00a0cc)', transition: 'width 0.5s ease' }} />
-                <div style={{ flex: 1, background: 'linear-gradient(90deg, #4488ff, var(--accent-purple))' }} />
+                <div style={{ width: `${(portfolioStats.stockVal / portfolioStats.totalValue) * 100}%`, background: 'linear-gradient(90deg, #4488ff, var(--accent-purple))', transition: 'width 0.5s ease' }} />
+                <div style={{ width: `${(portfolioStats.metalVal / portfolioStats.totalValue) * 100}%`, background: 'linear-gradient(90deg, #eab308, #ca8a04)', transition: 'width 0.5s ease' }} />
               </div>
             </div>
           )}
@@ -409,7 +447,7 @@ export default function PortfolioPage() {
               >
                 {/* Asset info */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 10, background: item.asset_type === 'crypto' ? 'rgba(0,212,255,0.1)' : 'rgba(68,136,255,0.1)', border: `1px solid ${item.asset_type === 'crypto' ? 'rgba(0,212,255,0.2)' : 'rgba(68,136,255,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 11, color: item.asset_type === 'crypto' ? 'var(--accent-cyan)' : 'var(--accent-blue)', fontFamily: 'Space Grotesk, sans-serif' }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 10, background: item.asset_type === 'crypto' ? 'rgba(0,212,255,0.1)' : item.asset_type === 'stock' ? 'rgba(68,136,255,0.1)' : 'rgba(234,179,8,0.1)', border: `1px solid ${item.asset_type === 'crypto' ? 'rgba(0,212,255,0.2)' : item.asset_type === 'stock' ? 'rgba(68,136,255,0.2)' : 'rgba(234,179,8,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 11, color: item.asset_type === 'crypto' ? 'var(--accent-cyan)' : item.asset_type === 'stock' ? 'var(--accent-blue)' : '#eab308', fontFamily: 'Space Grotesk, sans-serif' }}>
                     {item.symbol.slice(0, 3)}
                   </div>
                   <div>
@@ -428,7 +466,7 @@ export default function PortfolioPage() {
                     {item.pnlPct >= 0 ? '+' : ''}{item.pnlPct.toFixed(2)}%
                   </div>
                 </div>
-                <button onClick={() => handleDelete(item.id)}
+                <button onClick={() => { if(window.confirm(`${item.symbol} varlığını silmek istediğinize emin misiniz?`)) handleDelete(item.id); }}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 'var(--radius-sm)', background: 'transparent', border: '1px solid transparent', color: 'var(--text-dim)', cursor: 'pointer', transition: 'all 0.15s', marginLeft: 'auto' }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(244,63,94,0.12)'; e.currentTarget.style.borderColor = 'rgba(244,63,94,0.25)'; e.currentTarget.style.color = 'var(--accent-red)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.color = 'var(--text-dim)'; }}

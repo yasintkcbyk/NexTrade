@@ -123,11 +123,9 @@ export default function AlertsPage() {
   const selectedAssetData = marketData.find(m => m.symbol === form.symbol);
   const currentPrice = selectedAssetData?.price;
 
-  const getAuthHeaders = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('nt_token')}` } });
-
   const fetchAlerts = async () => {
     setLoading(true);
-    try { const r = await axios.get(`${API_BASE_URL}/api/alerts/`, getAuthHeaders()); setAlerts(r.data || []); }
+    try { const r = await axios.get(`${API_BASE_URL}/api/alerts/`); setAlerts(r.data || []); }
     catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -135,14 +133,14 @@ export default function AlertsPage() {
   const checkTelegram = async () => {
     if (!user?.telegram_chat_id) { setTelegramStatus('error'); return; }
     try {
-      const r = await axios.get(`${API_BASE_URL}/api/alerts/test`, getAuthHeaders());
+      const r = await axios.get(`${API_BASE_URL}/api/alerts/test`);
       setTelegramStatus(r.data?.success ? 'connected' : 'error');
     } catch { setTelegramStatus('error'); }
   };
 
   const handleSaveChatId = async () => {
     try {
-      const res = await axios.put(`${API_BASE_URL}/api/auth/me/telegram`, { telegram_chat_id: chatIdInput }, getAuthHeaders());
+      const res = await axios.put(`${API_BASE_URL}/api/auth/me/telegram`, { telegram_chat_id: chatIdInput });
       const updatedUser = res.data;
       setUser(updatedUser);
       localStorage.setItem('nt_user', JSON.stringify(updatedUser));
@@ -163,7 +161,7 @@ export default function AlertsPage() {
         symbol: form.symbol,
         target_price: parseFloat(form.target_price) / rate,
         condition: form.condition
-      }, getAuthHeaders());
+      });
       setForm(prev => ({ ...prev, target_price: '' }));
       fetchAlerts();
     } catch (e) { console.error(e); }
@@ -171,7 +169,7 @@ export default function AlertsPage() {
   };
 
   const handleDelete = async (id) => {
-    try { await axios.delete(`${API_BASE_URL}/api/alerts/${id}`, getAuthHeaders()); fetchAlerts(); }
+    try { await axios.delete(`${API_BASE_URL}/api/alerts/${id}`); fetchAlerts(); }
     catch (e) { console.error(e); }
   };
 
@@ -292,7 +290,7 @@ export default function AlertsPage() {
           {user?.telegram_chat_id && telegramStatus === 'connected' && (
             <button
               onClick={async () => {
-                try { await axios.get(`${API_BASE_URL}/api/alerts/test`, getAuthHeaders()); alert("✅ Test mesajı gönderildi!"); }
+                try { await axios.get(`${API_BASE_URL}/api/alerts/test`); alert("✅ Test mesajı gönderildi!"); }
                 catch { alert("❌ Test başarısız."); }
               }}
               style={{ width: '100%', marginTop: 12, padding: '10px', background: 'transparent', border: '1px dashed rgba(16,185,129,0.25)', borderRadius: 'var(--radius-md)', color: 'var(--accent-green)', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontWeight: 600 }}

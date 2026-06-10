@@ -1,26 +1,28 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createChart, CrosshairMode, LineStyle } from 'lightweight-charts';
+import { Settings, BarChart2, TrendingUp } from 'lucide-react';
 
 export default function Chart({ data, signals = [] }) {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
-  const candleSeriesRef = useRef(null);
-  const volumeSeriesRef = useRef(null);
+  const mainSeriesRef = useRef(null);
+
+  const [chartType, setChartType] = useState('candle'); // 'candle' | 'line'
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     if (!chartContainerRef.current || !data || data.length === 0) return;
 
-    // Önceki chart'ı temizle
     if (chartRef.current) {
       chartRef.current.remove();
       chartRef.current = null;
+      mainSeriesRef.current = null;
     }
 
     const container = chartContainerRef.current;
     const height = container.clientHeight || 400;
     const width  = container.clientWidth  || 800;
 
-    // Chart oluştur
     const chart = createChart(container, {
       width,
       height,
@@ -48,7 +50,7 @@ export default function Chart({ data, signals = [] }) {
         borderColor: 'rgba(99,179,237,0.1)',
         timeVisible: true,
         secondsVisible: false,
-        rightOffset: 12, // Binancedeki gibi sağda boşluk bırakır
+        rightOffset: 12,
       },
       handleScale: { mouseWheel: true, pinch: true },
       handleScroll: { mouseWheel: true, pressedMouseMove: true },
@@ -56,37 +58,42 @@ export default function Chart({ data, signals = [] }) {
 
     chartRef.current = chart;
 
-    // Candlestick serisi
-    const candleSeries = chart.addCandlestickSeries({
-      upColor:          '#0ecb81', // Binance green
-      downColor:        '#f6465d', // Binance red
-      borderUpColor:    '#0ecb81',
-      borderDownColor:  '#f6465d',
-      wickUpColor:      '#0ecb81',
-      wickDownColor:    '#f6465d',
-    });
+    let mainSeries;
+    if (chartType === 'candle') {
+      mainSeries = chart.addCandlestickSeries({
+        upColor: '#0ecb81',
+        downColor: '#f6465d',
+        borderUpColor: '#0ecb81',
+        borderDownColor: '#f6465d',
+        wickUpColor: '#0ecb81',
+        wickDownColor: '#f6465d',
+      });
+    } else {
+      mainSeries = chart.addLineSeries({
+        color: '#4488ff',
+        lineWidth: 2,
+        crosshairMarkerVisible: true,
+      });
+    }
+    mainSeriesRef.current = mainSeries;
 
-    // Mum verilerini normalize et
     const formattedData = data
       .filter(d => d.open && d.high && d.low && d.close)
       .map(d => {
-        // Zaman UNIX timestamp olarak gelmeli (saniye)
         let time = d.time;
-        if (typeof time === 'string') {
-          time = Math.floor(new Date(time).getTime() / 1000);
-        }
+        if (typeof time === 'string') time = Math.floor(new Date(time).getTime() / 1000);
         return {
           time,
-          open:  parseFloat(d.open),
-          high:  parseFloat(d.high),
-          low:   parseFloat(d.low),
+          open: parseFloat(d.open),
+          high: parseFloat(d.high),
+          low: parseFloat(d.low),
           close: parseFloat(d.close),
+          value: parseFloat(d.close) // LineSeries için
         };
       })
-      .filter(d => !isNaN(d.time) && !isNaN(d.open))
+      .filter(d => !isNaN(d.time) && !isNaN(d.close))
       .sort((a, b) => a.time - b.time);
 
-    // Duplicate time'ları filtrele
     const seen = new Set();
     const uniqueData = formattedData.filter(d => {
       if (seen.has(d.time)) return false;
@@ -95,61 +102,38 @@ export default function Chart({ data, signals = [] }) {
     });
 
     if (uniqueData.length > 0) {
-      candleSeries.setData(uniqueData);
-      candleSeriesRef.current = candleSeries;
+      mainSeries.setData(uniqueData);
 
-      // Volume histogramı (alt)
-      const volumeSeries = chart.addHistogramSeries({
-        color: '#4488ff',
-        priceFormat: { type: 'volume' },
-        priceScaleId: '', // Attach to overlay
-        scaleMargins: { top: 0.85, bottom: 0 },
-      });
-
-      const volumeData = uniqueData.map(d => ({
-        time: d.time,
-        value: data.find(r => {
-          let rt = r.time;
-          if (typeof rt === 'string') rt = Math.floor(new Date(rt).getTime() / 1000);
-          return rt === d.time;
-        })?.volume || 0,
-        color: d.close >= d.open ? 'rgba(16,185,129,0.25)' : 'rgba(244,63,94,0.25)',
-      }));
-
-      volumeSeries.setData(volumeData);
-      volumeSeriesRef.current = volumeSeries;
-
-      // Sinyal işaretleyicileri (AL/SAT)
       if (signals && signals.length > 0) {
-        const markers = signals
-          .map(s => {
-            let time = s.time;
-            if (typeof time === 'string') time = Math.floor(new Date(time).getTime() / 1000);
-            if (!seen.has(time)) return null;
-            return {
-              time,
-              position: s.position || 'belowBar',
-              color: s.color || '#4488ff',
-              shape: s.shape || 'arrowUp',
-              text: s.text || '',
-            };
-          })
-          .filter(Boolean)
-          .sort((a, b) => a.time - b.time);
+        const seenArray = Array.from(seen).sort((a, b) => a - b);
+        const findNearestTime = (signalTime) => {
+          let ts = typeof signalTime === 'string' ? Math.floor(new Date(signalTime + 'T00:00:00Z').getTime() / 1000) : signalTime;
+          if (seenArray.length === 0) return null;
+          let nearest = null, minDiff = Infinity;
+          for (const t of seenArray) {
+            const diff = Math.abs(t - ts);
+            if (diff < minDiff) { minDiff = diff; nearest = t; }
+          }
+          return minDiff <= 3 * 86400 ? nearest : null;
+        };
 
-        if (markers.length > 0) {
-          candleSeries.setMarkers(markers);
-        }
+        const markers = signals.map(s => {
+          const matchedTime = findNearestTime(s.time);
+          if (!matchedTime) return null;
+          return {
+            time: matchedTime, position: s.position || 'belowBar', color: s.color || '#4488ff', shape: s.shape || 'arrowUp', text: s.text || ''
+          };
+        }).filter(Boolean).sort((a, b) => a.time - b.time);
+
+        const uniqueMarkers = markers.filter((m, i, arr) => i === 0 || m.time !== arr[i - 1].time);
+        if (uniqueMarkers.length > 0) mainSeries.setMarkers(uniqueMarkers);
       }
 
       chart.timeScale().fitContent();
     }
 
-    // Responsive resize
     const resizeObserver = new ResizeObserver(() => {
-      if (chartRef.current && container) {
-        chartRef.current.resize(container.clientWidth, container.clientHeight);
-      }
+      if (chartRef.current && container) chartRef.current.resize(container.clientWidth, container.clientHeight);
     });
     resizeObserver.observe(container);
 
@@ -160,12 +144,37 @@ export default function Chart({ data, signals = [] }) {
         chartRef.current = null;
       }
     };
-  }, [data, signals]);
+  }, [data, signals, chartType]);
 
   return (
-    <div
-      ref={chartContainerRef}
-      style={{ width: '100%', height: '100%', minHeight: 0 }}
-    />
+    <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+      
+      {/* Chart Toolbar */}
+      <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10, display: 'flex', gap: 8 }}>
+        <button 
+          onClick={() => setShowSettings(!showSettings)}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', cursor: 'pointer', backdropFilter: 'blur(4px)' }}
+          title="Grafik Ayarları"
+        >
+          <Settings size={16} />
+        </button>
+
+        {showSettings && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(15,23,42,0.85)', padding: '4px 8px', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', animation: 'fadeIn 0.2s ease' }}>
+            <button onClick={() => setChartType('candle')} style={{ background: chartType === 'candle' ? 'rgba(68,136,255,0.2)' : 'transparent', color: chartType === 'candle' ? 'var(--accent-blue)' : 'var(--text-muted)', border: 'none', padding: '4px 8px', borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}>
+              <BarChart2 size={14} /> Mum
+            </button>
+            <button onClick={() => setChartType('line')} style={{ background: chartType === 'line' ? 'rgba(68,136,255,0.2)' : 'transparent', color: chartType === 'line' ? 'var(--accent-blue)' : 'var(--text-muted)', border: 'none', padding: '4px 8px', borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600 }}>
+              <TrendingUp size={14} /> Çizgi
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div
+        ref={chartContainerRef}
+        style={{ width: '100%', flex: 1, minHeight: 0 }}
+      />
+    </div>
   );
 }

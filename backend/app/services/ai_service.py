@@ -1,4 +1,5 @@
 import os
+import json
 from dotenv import load_dotenv
 from groq import Groq
 from typing import List, Dict
@@ -18,11 +19,11 @@ Kuralların:
 - Spekülatif iddialarda bulunma, "bu bir yatırım tavsiyesi değildir" uyarısını uygun yerlerde ekle.
 - Kısa ve net ol — kullanıcı vakit kaybetmek istemiyor.
 - Bağlam olarak piyasa haberleri verilirse bunları analizine dahil et.
-- Sayıları formatla: 65.000 $ gibi.
+- Sayıları kullanıcının seçtiği para birimiyle formatla (örn. ₺65.000 veya $65.000).
 - Emoji kullanabilirsin ama abartma."""
 
 
-def get_chart_analysis(symbol: str, current_price: float, chart_data: list) -> str:
+def get_chart_analysis(symbol: str, current_price: float, chart_data: list, currency: str = "USD", currency_symbol: str = "$") -> dict:
     """Grafik verilerini yapay zekaya gönderip teknik analiz yorumu alır."""
     if not client:
         return "Yapay zeka asistanı şu an aktif değil (GROQ API Key eksik)."
@@ -40,16 +41,19 @@ def get_chart_analysis(symbol: str, current_price: float, chart_data: list) -> s
         recent_low = min(lows) if lows else 0
         trend = "yükseliş" if closes and closes[-1] > closes[0] else "düşüş"
         
+        sym = currency_symbol
         prompt = f"""
-{symbol} teknik analizi iste. Güncel fiyat: {current_price:,.2f} $
+{symbol} teknik analizi iste. Para birimi: {currency}. Güncel fiyat: {sym}{current_price:,.2f}
 
 Son {len(recent_data)} mum verisi özeti:
 - Dönem trend: {trend}
-- Dönem en yüksek: {recent_high:,.2f} $
-- Dönem en düşük: {recent_low:,.2f} $
-- Dönem ortalama kapanış: {avg_close:,.2f} $
-- İlk kapanış: {closes[0] if closes else 0:,.2f} $
-- Son kapanış: {closes[-1] if closes else 0:,.2f} $
+- Dönem en yüksek: {sym}{recent_high:,.2f}
+- Dönem en düşük: {sym}{recent_low:,.2f}
+- Dönem ortalama kapanış: {sym}{avg_close:,.2f}
+- İlk kapanış: {sym}{closes[0] if closes else 0:,.2f}
+- Son kapanış: {sym}{closes[-1] if closes else 0:,.2f}
+
+Tüm fiyat değerlerini {currency} ({sym}) cinsinden ifade et.
 
 Lütfen bu verilere dayanarak:
 1. **Trend Analizi**: Genel eğilim ne yönde?
@@ -57,7 +61,13 @@ Lütfen bu verilere dayanarak:
 3. **Risk Değerlendirmesi**: Kısa vadede potansiyel riskler ve fırsatlar neler?
 4. **Özet Tavsiye**: Yatırımcı için net, kısa bir değerlendirme (bu bir yatırım tavsiyesi değildir).
 
-Maksimum 4 paragraf olsun.
+Yanıtını SADECE geçerli bir JSON formatında ver. JSON şu şekilde olmalı:
+{{
+  "signal": "STRONG_BUY" | "BUY" | "HOLD" | "SELL" | "STRONG_SELL",
+  "analysis": "Yukarıda istenen teknik analiz metni (markdown destekli)"
+}}
+Eğer piyasa belirsizse veya grafik yön vermiyorsa signal olarak "HOLD" kullan.
+Başka hiçbir metin ekleme, sadece JSON objesi döndür.
 """
         
         response = client.chat.completions.create(
@@ -67,10 +77,12 @@ Maksimum 4 paragraf olsun.
             ],
             model="llama-3.3-70b-versatile",
             max_tokens=800,
+            response_format={"type": "json_object"}
         )
-        return response.choices[0].message.content
+        content = response.choices[0].message.content
+        return json.loads(content)
     except Exception as e:
-        return f"Analiz oluşturulurken bir hata oluştu: {str(e)}"
+        return {"signal": "HOLD", "analysis": f"Analiz oluşturulurken bir hata oluştu: {str(e)}"}
 
 
 def get_chatbot_response(user_message: str, history: List[Dict] = None, context_news: str = "") -> str:
@@ -141,7 +153,7 @@ Bu haberi yatırımcı perspektifinden değerlendir:
         return f"Özet oluşturulamadı: {str(e)}"
 
 
-def analyze_portfolio(portfolio_data: list, market_prices: dict) -> str:
+def analyze_portfolio(portfolio_data: list, market_prices: dict, currency: str = "USD", currency_symbol: str = "$") -> str:
     """Kullanıcı portföyünü AI ile analiz eder ve kişiselleştirilmiş yorum üretir."""
     if not client:
         return "AI servisi şu an aktif değil (GROQ API Key eksik)."
@@ -150,6 +162,7 @@ def analyze_portfolio(portfolio_data: list, market_prices: dict) -> str:
         return "Portföyünüz boş görünüyor. Önce varlık ekleyin."
 
     try:
+        sym = currency_symbol
         # Portföy özeti oluştur
         total_cost = 0
         total_value = 0
@@ -173,8 +186,8 @@ def analyze_portfolio(portfolio_data: list, market_prices: dict) -> str:
             
             items_summary.append(
                 f"- {asset_name} ({symbol}, {asset_type}): "
-                f"{quantity} adet, Alış: ${buy_price:,.2f}, Güncel: ${current_price:,.2f}, "
-                f"P&L: ${pnl:,.2f} ({pnl_pct:+.2f}%)"
+                f"{quantity} adet, Alış: {sym}{buy_price:,.2f}, Güncel: {sym}{current_price:,.2f}, "
+                f"P&L: {sym}{pnl:,.2f} ({pnl_pct:+.2f}%)"
             )
         
         total_pnl = total_value - total_cost
@@ -189,16 +202,19 @@ def analyze_portfolio(portfolio_data: list, market_prices: dict) -> str:
         stock_pct = (stock_val / total_value * 100) if total_value > 0 else 0
         
         prompt = f"""Aşağıdaki yatırım portföyünü profesyonel bir analist gözüyle değerlendir:
+Para birimi: {currency} ({sym})
 
 PORTFÖY ÖZETİ:
-- Toplam Maliyet: ${total_cost:,.2f}
-- Güncel Değer: ${total_value:,.2f}
-- Toplam Kar/Zarar: ${total_pnl:,.2f} ({total_pnl_pct:+.2f}%)
+- Toplam Maliyet: {sym}{total_cost:,.2f}
+- Güncel Değer: {sym}{total_value:,.2f}
+- Toplam Kar/Zarar: {sym}{total_pnl:,.2f} ({total_pnl_pct:+.2f}%)
 - Kripto Oranı: %{crypto_pct:.1f}
 - Hisse Oranı: %{stock_pct:.1f}
 
 VARLIK DETAYLARI:
 {chr(10).join(items_summary)}
+
+Tüm fiyat değerlerini {currency} ({sym}) cinsinden ifade et.
 
 Lütfen şunları analiz et:
 1. **Genel Performans**: Portföy nasıl gidiyor? Kâr mı zarar mı baskın?

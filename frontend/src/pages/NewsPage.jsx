@@ -31,9 +31,10 @@ export default function NewsPage({ onSummarizeNews }) {
   const filteredNews = useMemo(() => {
     return newsData.filter(n => {
       const matchSearch = !searchNews || n.title.toLowerCase().includes(searchNews.toLowerCase());
-      return matchSearch;
+      const matchCategory = category === 'all' || n.category === category;
+      return matchSearch && matchCategory;
     });
-  }, [newsData, searchNews]);
+  }, [newsData, searchNews, category]);
 
   const totalPages = Math.ceil(filteredNews.length / PER_PAGE);
   const pageNews = filteredNews.slice((page - 1) * PER_PAGE, page * PER_PAGE);

@@ -11,8 +11,8 @@ def fetch_crypto_history(coin_id: str, interval: str = '1D'):
     return data
 
 @router.get("/{coin_id}/signals")
-def fetch_crypto_signals(coin_id: str):
-    return get_crypto_signals(coin_id)
+def fetch_crypto_signals(coin_id: str, interval: str = '1D'):
+    return get_crypto_signals(coin_id, interval)
 
 @router.get("/{coin_id}/news")
 def fetch_crypto_news(coin_id: str):

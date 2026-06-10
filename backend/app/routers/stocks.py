@@ -15,8 +15,8 @@ def fetch_stock_history(symbol: str, interval: str = '1D'):
     return data
 
 @router.get("/{symbol}/signals")
-def fetch_stock_signals(symbol: str):
-    data = get_stock_signals(symbol)
+def fetch_stock_signals(symbol: str, interval: str = '1D'):
+    data = get_stock_signals(symbol, interval)
     return data
 
 @router.get("/{symbol}/news")

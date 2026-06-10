@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { FALLBACK_MARKET, CURRENCIES, LANGUAGES, TRANSLATIONS, API_BASE_URL } from '../utils/constants';
 
@@ -80,9 +80,17 @@ export function AppProvider({ children }) {
     setUser(null);
   }, []);
 
-  // Axios interceptor for handling 401 Unauthorized errors globally
+  // Axios interceptor for handling 401 Unauthorized errors globally and attaching tokens
   useEffect(() => {
-    const interceptor = axios.interceptors.response.use(
+    const reqInterceptor = axios.interceptors.request.use((config) => {
+      const token = localStorage.getItem('nt_token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    }, (error) => Promise.reject(error));
+
+    const resInterceptor = axios.interceptors.response.use(
       (response) => response,
       (error) => {
         if (error.response && error.response.status === 401) {
@@ -93,11 +101,12 @@ export function AppProvider({ children }) {
       }
     );
     return () => {
-      axios.interceptors.response.eject(interceptor);
+      axios.interceptors.request.eject(reqInterceptor);
+      axios.interceptors.response.eject(resInterceptor);
     };
   }, [handleLogout]);
 
-  const value = {
+  const value = useMemo(() => ({
     user, setUser, handleLogin, handleLogout,
     marketData, marketLoading,
     favorites, toggleFavorite,
@@ -106,7 +115,15 @@ export function AppProvider({ children }) {
     theme, setTheme,
     lastUpdated,
     API_BASE_URL
-  };
+  }), [
+    user, handleLogout,
+    marketData, marketLoading,
+    favorites, toggleFavorite,
+    currency, rates,
+    lang, t,
+    theme,
+    lastUpdated
+  ]);
 
   return (
     <AppContext.Provider value={value}>

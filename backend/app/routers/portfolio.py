@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from enum import Enum
 from datetime import datetime
 from app.database import get_db
 from app.models import PortfolioItem, User
@@ -12,18 +13,23 @@ router = APIRouter(prefix="/api/portfolio", tags=["Portfolio"])
 
 # ─── Pydantic Schemas ───────────────────────────────────────────
 
+class AssetType(str, Enum):
+    crypto = "crypto"
+    stock = "stock"
+    metal = "metal"
+
 class PortfolioItemCreate(BaseModel):
     symbol: str
     asset_name: str
-    asset_type: str   # "crypto" | "stock"
-    quantity: float
-    buy_price: float
+    asset_type: AssetType
+    quantity: float = Field(gt=0)
+    buy_price: float = Field(gt=0)
     notes: Optional[str] = None
 
 
 class PortfolioItemUpdate(BaseModel):
-    quantity: Optional[float] = None
-    buy_price: Optional[float] = None
+    quantity: Optional[float] = Field(None, gt=0)
+    buy_price: Optional[float] = Field(None, gt=0)
     notes: Optional[str] = None
 
 

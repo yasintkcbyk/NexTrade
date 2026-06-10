@@ -1,8 +1,11 @@
+import logging
 import yfinance as yf
 from datetime import datetime, timedelta
-import random
 import pandas as pd
+from fastapi import HTTPException
 from app.services.analysis_service import get_sma_crossover_signals
+
+logger = logging.getLogger(__name__)
 
 def get_stock_data(symbol: str):
     """
@@ -24,13 +27,8 @@ def get_stock_data(symbol: str):
             "currency": ticker.info.get("currency", "USD")
         }
     except Exception as e:
-        print(f"Hisse verisi çekilemedi ({symbol}): {e}")
-        # Hata durumunda uygulamanın çökmemesi için varsayılan (dummy) veri döndürüyoruz
-        return {
-            "symbol": symbol.upper(),
-            "current_price": 175.50,
-            "currency": "USD"
-        }
+        logger.error(f"Hisse verisi çekilemedi ({symbol}): {e}")
+        raise HTTPException(status_code=404, detail=f"Hisse verisi bulunamadı ({symbol}).")
 
 def get_stock_history(symbol: str, interval: str = '1d'):
     # Kullanıcı dostu zaman aralıklarını yfinance parametrelerine çevir
@@ -62,43 +60,28 @@ def get_stock_history(symbol: str, interval: str = '1d'):
             })
         return chart_data
     except Exception as e:
-        print(f"Hisse geçmişi çekilemedi ({symbol}): {e}")
-        # Hata durumunda uygulamanın çökmemesi için varsayılan (dummy) grafik verisi döndürüyoruz
-        chart_data = []
-        base_price = 150.0
-        for i in range(30, -1, -1):
-            date = (datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d')
-            open_price = base_price + random.uniform(-2, 2)
-            close_price = open_price + random.uniform(-5, 5)
-            chart_data.append({
-                "time": date,
-                "open": round(open_price, 2),
-                "high": round(max(open_price, close_price) + random.uniform(0, 2), 2),
-                "low": round(min(open_price, close_price) - random.uniform(0, 2), 2),
-                "close": round(close_price, 2)
-            })
-            base_price = close_price
-        return chart_data
+        logger.error(f"Hisse geçmişi çekilemedi ({symbol}): {e}")
+        return []
 
-def get_stock_signals(symbol: str):
+def get_stock_signals(symbol: str, interval: str = '1D'):
     try:
-        ticker = yf.Ticker(symbol)
-        # Sinyal analizi için 1 yıllık günlük veri çekiyoruz
-        hist = ticker.history(period="1y", interval="1d")
-        if hist.empty:
-            raise ValueError("Boş veri")
-        return get_sma_crossover_signals(hist)
-    except Exception:
-        # İnternet engeli varsa çökmek yerine grafiğe yedek (sahte) sinyaller basar
-        signals = []
-        for i in [25, 18, 10, 4]: # Son 30 gün içinde rastgele 4 güne ok koy
-            date = (datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d')
-            is_buy = random.choice([True, False])
-            if is_buy:
-                signals.append({"time": date, "position": "belowBar", "color": "#26a69a", "shape": "arrowUp", "text": "Al"})
-            else:
-                signals.append({"time": date, "position": "aboveBar", "color": "#ef5350", "shape": "arrowDown", "text": "Sat"})
-        return sorted(signals, key=lambda x: x['time'])
+        # Tıpkı grafikte olduğu gibi, yfinance üzerinden doğru zaman dilimi verisini al
+        chart_data = get_stock_history(symbol, interval)
+        if not chart_data:
+            return []
+            
+        import pandas as pd
+        df = pd.DataFrame(chart_data)
+        df.rename(columns={'close': 'Close', 'open': 'Open', 'high': 'High', 'low': 'Low'}, inplace=True)
+        
+        # 'time' unix timestamp'ten datetime objesine
+        df['time'] = pd.to_datetime(df['time'], unit='s')
+        df.set_index('time', inplace=True)
+        
+        return get_sma_crossover_signals(df)
+    except Exception as e:
+        logger.error(f"Error fetching signals for {symbol}: {e}")
+        return []
 
 def get_stock_news(symbol: str):
     try:
@@ -120,6 +103,7 @@ def get_stock_news(symbol: str):
             })
         return formatted_news
     except Exception as e:
+        logger.error(f"Error fetching news for {symbol}: {e}")
         return []
 
 def get_general_news():
@@ -142,5 +126,6 @@ def get_general_news():
                 "timestamp": timestamp
             })
         return formatted_news
-    except Exception:
+    except Exception as e:
+        logger.error(f"Error fetching general news: {e}")
         return []

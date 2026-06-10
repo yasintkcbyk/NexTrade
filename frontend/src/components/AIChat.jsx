@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Bot, X, MessageCircle, Send } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { CURRENCIES, formatPrice } from '../utils/constants';
+import ReactMarkdown from 'react-markdown';
 
 export default function AIChat({ selectedAsset }) {
   const { currency, rates, t, API_BASE_URL } = useAppContext();
@@ -30,18 +31,27 @@ export default function AIChat({ selectedAsset }) {
     return () => window.removeEventListener('nt-summarize-news', handleSummarize);
   }, []);
 
+  const selectedAssetRef = useRef(selectedAsset);
+  useEffect(() => { selectedAssetRef.current = selectedAsset; }, [selectedAsset]);
+
   const send = async (text) => {
     const msg = text || input;
     if (!msg.trim()) return;
-    setMessages(prev => [...prev, { sender: 'user', text: msg }]);
+    
+    let currentHistory = [];
+    setMessages(prev => {
+      currentHistory = prev.slice(-10);
+      return [...prev, { sender: 'user', text: msg }];
+    });
+    
     setInput('');
     setLoading(true);
 
     try {
       const res = await axios.post(`${API_BASE_URL}/api/ai/chat`, {
         message: msg,
-        history: messages.slice(-10),
-        context_news: selectedAsset ? `Kullanıcı şu an ${selectedAsset.name} (${selectedAsset.symbol}) bakıyor. Fiyat: ${CURRENCIES[currency].symbol}${formatPrice(selectedAsset.price, currency, rates)}, 24s değişim: ${selectedAsset.change}%` : ''
+        history: currentHistory,
+        context_news: selectedAssetRef.current ? `Kullanıcı şu an ${selectedAssetRef.current.name} (${selectedAssetRef.current.symbol}) bakıyor. Fiyat: ${CURRENCIES[currency].symbol}${formatPrice(selectedAssetRef.current.price, currency, rates)}, 24s değişim: ${selectedAssetRef.current.change}%` : ''
       });
       setMessages(prev => [...prev, { sender: 'ai', text: res.data.reply }]);
     } catch {
@@ -67,8 +77,10 @@ export default function AIChat({ selectedAsset }) {
           <div className="chat-messages">
             {messages.map((msg, i) => (
               <div key={i} className={`chat-msg ${msg.sender}`}>
-                <div className={`chat-bubble ${msg.sender}`} style={{ whiteSpace: 'pre-wrap' }}>
-                  {msg.text === 'GREETING_MSG' ? t('aiGreeting') : msg.text}
+                <div className={`chat-bubble ${msg.sender}`}>
+                  {msg.text === 'GREETING_MSG' ? t('aiGreeting') : (
+                    msg.sender === 'ai' ? <ReactMarkdown>{msg.text}</ReactMarkdown> : <div style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</div>
+                  )}
                 </div>
               </div>
             ))}

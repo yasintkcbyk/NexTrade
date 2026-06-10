@@ -48,7 +48,7 @@ export default function AssetPage() {
           const sep = asset.type === 'crypto'
             ? `${API_BASE_URL}/api/crypto/${asset.id}/signals`
             : `${API_BASE_URL}/api/stocks/${asset.id}/signals`;
-          const rs = await axios.get(sep);
+          const rs = await axios.get(sep, { params: { interval: timeframe } });
           setSignals(rs.data);
         } catch (e) { console.error('Signals error:', e); }
       }
@@ -70,15 +70,21 @@ export default function AssetPage() {
   const handleAnalyzeChart = async () => {
     setShowAnalysisModal(true);
     setAiAnalysis(null);
+    
+    const CURRENCY_SYMBOLS = { USD: '$', TRY: '\u20ba', GBP: '\u00a3', KZT: '\u20b8', RUB: '\u20bd', EUR: '\u20ac' };
+    const currencySymbol = CURRENCY_SYMBOLS[currency] || '$';
+    
     try {
       const res = await axios.post(`${API_BASE_URL}/api/ai/analyze-chart`, {
         symbol: asset.symbol,
-        current_price: asset.price,
+        current_price: (asset.price || 0) * (rates[currency] || 1),
         chart_data: convertedChartData || [],
+        currency: currency,
+        currency_symbol: currencySymbol,
       });
       setAiAnalysis(res.data.analysis);
     } catch (e) {
-      setAiAnalysis('Analiz alınırken hata oluştu. Backend bağlantısını kontrol edin.');
+      setAiAnalysis({ signal: "HOLD", analysis: 'Analiz alınırken hata oluştu. Backend bağlantısını kontrol edin.' });
     }
   };
 
@@ -110,7 +116,7 @@ export default function AssetPage() {
             onClick={() => navigate('/')}
             style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, cursor: 'pointer', marginBottom: 16, padding: 0 }}
           >
-            <ArrowLeft size={14} /> Geri Dön
+            <ArrowLeft size={14} /> {t('goBack') || 'Geri Dön'}
           </button>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -149,7 +155,7 @@ export default function AssetPage() {
 
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: 32, fontWeight: 700, fontFamily: 'JetBrains Mono, monospace', color: 'var(--text-primary)' }}>
-            {CURRENCIES[currency]?.symbol || '$'}{formatPrice(asset.price, currency, rates)}
+            {formatPrice(asset.price, currency, rates)}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6, fontSize: 15, fontWeight: 600, color: (asset.change || 0) >= 0 ? 'var(--accent-green)' : 'var(--accent-red)', marginTop: 4 }}>
             {(asset.change || 0) >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
@@ -169,7 +175,7 @@ export default function AssetPage() {
         </div>
         <div style={{ flex: 1 }} />
         <button className={`action-btn amber ${showSignals ? 'active' : ''}`} onClick={() => setShowSignals(!showSignals)}>
-          <Bot size={13} /> {t('buySellSignals')}
+          <Bot size={13} /> {t('buySellSignals')} {showSignals && signals.length === 0 ? '(Yok)' : ''}
         </button>
         <button className="action-btn purple" onClick={handleAnalyzeChart}>
           <Sparkles size={13} /> {t('aiAnalyze')}
@@ -216,7 +222,37 @@ export default function AssetPage() {
               <button className="icon-btn" onClick={() => setShowAnalysisModal(false)}><X size={15} /></button>
             </div>
             <div className="analysis-modal-body">
-              {aiAnalysis ? aiAnalysis : (
+              {aiAnalysis ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {/* Signal Badge */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+                    <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>AI Sinyali:</span>
+                    <span style={{
+                      padding: '4px 10px', borderRadius: 'var(--radius-full)', fontSize: 13, fontWeight: 700,
+                      background: aiAnalysis.signal === 'STRONG_BUY' ? 'rgba(16,185,129,0.15)' :
+                                  aiAnalysis.signal === 'BUY' ? 'rgba(134,239,172,0.15)' :
+                                  aiAnalysis.signal === 'HOLD' ? 'rgba(252,211,77,0.15)' :
+                                  aiAnalysis.signal === 'SELL' ? 'rgba(251,146,60,0.15)' : 'rgba(244,63,94,0.15)',
+                      color: aiAnalysis.signal === 'STRONG_BUY' ? 'var(--accent-green)' :
+                             aiAnalysis.signal === 'BUY' ? '#86efac' :
+                             aiAnalysis.signal === 'HOLD' ? '#fcd34d' :
+                             aiAnalysis.signal === 'SELL' ? '#fb923c' : 'var(--accent-red)',
+                      border: `1px solid ${
+                        aiAnalysis.signal === 'STRONG_BUY' ? 'var(--accent-green)' :
+                        aiAnalysis.signal === 'BUY' ? '#86efac' :
+                        aiAnalysis.signal === 'HOLD' ? '#fcd34d' :
+                        aiAnalysis.signal === 'SELL' ? '#fb923c' : 'var(--accent-red)'
+                      }40`
+                    }}>
+                      {t(aiAnalysis.signal) || aiAnalysis.signal}
+                    </span>
+                  </div>
+                  {/* Analysis Text */}
+                  <div style={{ fontSize: 14, lineHeight: 1.75, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>
+                    {aiAnalysis.analysis}
+                  </div>
+                </div>
+              ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 48, gap: 14, color: 'var(--text-muted)' }}>
                   <Sparkles size={32} style={{ color: 'var(--accent-purple)', opacity: 0.6 }} className="animate-float" />
                   <span style={{ fontSize: 13 }}>{t('aiAnalyzing')}</span>

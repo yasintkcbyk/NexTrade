@@ -60,10 +60,12 @@ export default function MarketPage({ activeTab, setActiveTab, selectedAsset, set
         symbol: selectedAsset.symbol,
         current_price: selectedAsset.price,
         chart_data: currentChartData || [],
+        currency: currency,
+        currency_symbol: CURRENCIES[currency]?.symbol || "$"
       });
-      setAiAnalysis(res.data.analysis);
+      setAiAnalysis(res.data.analysis); // This is now an object: {signal, analysis}
     } catch (e) {
-      setAiAnalysis('Analiz alınırken hata oluştu. Backend bağlantısını kontrol edin.');
+      setAiAnalysis({ signal: "HOLD", analysis: 'Analiz alınırken hata oluştu. Backend bağlantısını kontrol edin.' });
     }
   };
 
@@ -84,6 +86,10 @@ export default function MarketPage({ activeTab, setActiveTab, selectedAsset, set
           <button className={`market-tab ${activeTab === 'stock' ? 'active' : ''}`}
             onClick={() => { setActiveTab('stock'); const f = marketData.find(a => a.type === 'stock'); if (f) setSelectedAsset(f); }}>
             📈 {t('stock')}
+          </button>
+          <button className={`market-tab ${activeTab === 'metal' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('metal'); const f = marketData.find(a => a.type === 'metal'); if (f) setSelectedAsset(f); }}>
+            ✨ {t('metal')}
           </button>
         </div>
 
@@ -159,9 +165,9 @@ export default function MarketPage({ activeTab, setActiveTab, selectedAsset, set
                   <span className="asset-name-small">{asset.name.length > 14 ? asset.name.slice(0, 14) + '…' : asset.name}</span>
                 </div>
               </div>
-              <div className="price-cell">{CURRENCIES[currency].symbol}{formatPrice(asset.price, currency, rates)}</div>
-              <div className="price-cell" style={{ color: 'var(--text-secondary)', fontSize: 11.5 }}>{CURRENCIES[currency].symbol}{formatPrice(asset.high24h, currency, rates)}</div>
-              <div className="price-cell" style={{ color: 'var(--text-secondary)', fontSize: 11.5 }}>{CURRENCIES[currency].symbol}{formatPrice(asset.low24h, currency, rates)}</div>
+              <div className="price-cell">{formatPrice(asset.price, currency, rates)}</div>
+              <div className="price-cell" style={{ color: 'var(--text-secondary)', fontSize: 11.5 }}>{formatPrice(asset.high24h, currency, rates)}</div>
+              <div className="price-cell" style={{ color: 'var(--text-secondary)', fontSize: 11.5 }}>{formatPrice(asset.low24h, currency, rates)}</div>
               <div className={`change-badge ${(asset.change || 0) >= 0 ? 'positive' : 'negative'}`}>
                 {(asset.change || 0) >= 0 ? '+' : ''}{(asset.change || 0).toFixed(2)}%
               </div>
@@ -191,7 +197,37 @@ export default function MarketPage({ activeTab, setActiveTab, selectedAsset, set
               <button className="icon-btn" onClick={() => setShowAnalysisModal(false)}><X size={15} /></button>
             </div>
             <div className="analysis-modal-body">
-              {aiAnalysis ? aiAnalysis : (
+              {aiAnalysis ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {/* Signal Badge */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+                    <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>AI Sinyali:</span>
+                    <span style={{
+                      padding: '4px 10px', borderRadius: 'var(--radius-full)', fontSize: 13, fontWeight: 700,
+                      background: aiAnalysis.signal === 'STRONG_BUY' ? 'rgba(16,185,129,0.15)' :
+                                  aiAnalysis.signal === 'BUY' ? 'rgba(134,239,172,0.15)' :
+                                  aiAnalysis.signal === 'HOLD' ? 'rgba(252,211,77,0.15)' :
+                                  aiAnalysis.signal === 'SELL' ? 'rgba(251,146,60,0.15)' : 'rgba(244,63,94,0.15)',
+                      color: aiAnalysis.signal === 'STRONG_BUY' ? 'var(--accent-green)' :
+                             aiAnalysis.signal === 'BUY' ? '#86efac' :
+                             aiAnalysis.signal === 'HOLD' ? '#fcd34d' :
+                             aiAnalysis.signal === 'SELL' ? '#fb923c' : 'var(--accent-red)',
+                      border: `1px solid ${
+                        aiAnalysis.signal === 'STRONG_BUY' ? 'var(--accent-green)' :
+                        aiAnalysis.signal === 'BUY' ? '#86efac' :
+                        aiAnalysis.signal === 'HOLD' ? '#fcd34d' :
+                        aiAnalysis.signal === 'SELL' ? '#fb923c' : 'var(--accent-red)'
+                      }40`
+                    }}>
+                      {t(aiAnalysis.signal) || aiAnalysis.signal}
+                    </span>
+                  </div>
+                  {/* Analysis Text */}
+                  <div style={{ fontSize: 14, lineHeight: 1.75, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>
+                    {aiAnalysis.analysis}
+                  </div>
+                </div>
+              ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 48, gap: 14, color: 'var(--text-muted)' }}>
                   <Sparkles size={32} style={{ color: 'var(--accent-purple)', opacity: 0.6 }} className="animate-float" />
                   <span style={{ fontSize: 13 }}>{t('aiAnalyzing')}</span>

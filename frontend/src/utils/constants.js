@@ -13,6 +13,12 @@ export const FALLBACK_MARKET = [
   { id: 'chainlink', symbol: 'LINK',     name: 'Chainlink',        price: 17.80,    change: 2.10,  high24h: 18.20, low24h: 17.40, type: 'crypto' },
   { id: 'matic-network', symbol: 'POL',  name: 'Polygon (POL)',    price: 0.42,     change: -1.10, high24h: 0.45,  low24h: 0.40,  type: 'crypto' },
   { id: 'tron',      symbol: 'TRX',      name: 'TRON',             price: 0.115,    change: 0.50,  high24h: 0.12,  low24h: 0.11,  type: 'crypto' },
+  { id: 'shiba-inu', symbol: 'SHIB',     name: 'Shiba Inu',        price: 0.000025, change: 5.20,  high24h: 0.000027, low24h: 0.000023, type: 'crypto' },
+  { id: 'litecoin',  symbol: 'LTC',      name: 'Litecoin',         price: 85.50,    change: 1.50,  high24h: 87.00, low24h: 84.00, type: 'crypto' },
+  { id: 'the-open-network', symbol: 'TON', name: 'Toncoin',        price: 6.80,     change: -2.30, high24h: 7.10,  low24h: 6.50,  type: 'crypto' },
+  { id: 'uniswap',   symbol: 'UNI',      name: 'Uniswap',          price: 10.20,    change: 4.10,  high24h: 10.50, low24h: 9.80,  type: 'crypto' },
+  { id: 'pepe',      symbol: 'PEPE',     name: 'Pepe',             price: 0.000015, change: 12.50, high24h: 0.000016, low24h: 0.000012, type: 'crypto' },
+  { id: 'near',      symbol: 'NEAR',     name: 'NEAR Protocol',    price: 8.20,     change: 3.40,  high24h: 8.50,  low24h: 7.50,  type: 'crypto' },
   { id: 'AAPL',      symbol: 'AAPL',     name: 'Apple Inc.',       price: 175.50,   change: 1.15,  high24h: 178,   low24h: 174,   type: 'stock' },
   { id: 'TSLA',      symbol: 'TSLA',     name: 'Tesla',            price: 195.20,   change: -3.45, high24h: 200,   low24h: 190,   type: 'stock' },
   { id: 'MSFT',      symbol: 'MSFT',     name: 'Microsoft',        price: 420.10,   change: 0.85,  high24h: 425,   low24h: 415,   type: 'stock' },
@@ -26,15 +32,13 @@ export const FALLBACK_MARKET = [
   { id: 'KCHOL.IS',  symbol: 'KCHOL',    name: 'Koç Holding',      price: 215.50,   change: 1.80,  high24h: 220,   low24h: 210,   type: 'stock' },
   { id: 'ASELS.IS',  symbol: 'ASELS',    name: 'Aselsan',          price: 63.40,    change: -1.20, high24h: 65,    low24h: 62,    type: 'stock' },
   { id: 'TUPRS.IS',  symbol: 'TUPRS',    name: 'Tüpraş',           price: 177.20,   change: 0.90,  high24h: 180,   low24h: 175,   type: 'stock' },
-  { id: 'shiba-inu', symbol: 'SHIB',     name: 'Shiba Inu',        price: 0.000025, change: 5.20,  high24h: 0.000027, low24h: 0.000023, type: 'crypto' },
-  { id: 'litecoin',  symbol: 'LTC',      name: 'Litecoin',         price: 85.50,    change: 1.50,  high24h: 87.00, low24h: 84.00, type: 'crypto' },
-  { id: 'the-open-network', symbol: 'TON', name: 'Toncoin',        price: 6.80,     change: -2.30, high24h: 7.10,  low24h: 6.50,  type: 'crypto' },
-  { id: 'uniswap',   symbol: 'UNI',      name: 'Uniswap',          price: 10.20,    change: 4.10,  high24h: 10.50, low24h: 9.80,  type: 'crypto' },
   { id: 'V',         symbol: 'V',        name: 'Visa Inc.',        price: 275.40,   change: 0.50,  high24h: 278,   low24h: 273,   type: 'stock' },
   { id: 'JPM',       symbol: 'JPM',      name: 'JPMorgan Chase',   price: 195.80,   change: 1.20,  high24h: 198,   low24h: 194,   type: 'stock' },
   { id: 'SBUX',      symbol: 'SBUX',     name: 'Starbucks',        price: 85.20,    change: -0.80, high24h: 87,    low24h: 84,    type: 'stock' },
   { id: 'TCELL.IS',  symbol: 'TCELL',    name: 'Turkcell',         price: 85.60,    change: 2.10,  high24h: 87,    low24h: 84,    type: 'stock' },
-  { id: 'BIMAS.IS',  symbol: 'BIMAS',    name: 'BİM',              price: 395.00,   change: 1.50,  high24h: 400,   low24h: 390,   type: 'stock' }
+  { id: 'BIMAS.IS',  symbol: 'BIMAS',    name: 'BİM',              price: 395.00,   change: 1.50,  high24h: 400,   low24h: 390,   type: 'stock' },
+  { id: 'INTC',      symbol: 'INTC',     name: 'Intel',            price: 31.50,    change: 0.20,  high24h: 32,    low24h: 30,    type: 'stock' },
+  { id: 'FROTO.IS',  symbol: 'FROTO',    name: 'Ford Otosan',      price: 1080.00,  change: 2.30,  high24h: 1100,  low24h: 1050,  type: 'stock' }
 ];
 
 export const CURRENCIES = {
@@ -54,10 +58,10 @@ export const LANGUAGES = {
 
 export const TRANSLATIONS = {
   TR: {
-    markets: 'Piyasalar', news: 'Haberler', alerts: 'Alarmlar', mainMenu: 'Ana Menü', logout: 'Çıkış Yap',
+    markets: 'Piyasalar', news: 'Haberler', alerts: 'Alarmlar', mainMenu: 'Ana Menü', logout: 'Çıkış Yap', goBack: 'Geri Dön',
     marketView: 'Piyasa Görünümü', marketNews: 'Piyasa Bülteni', priceAlerts: 'Fiyat Alarmları', converter: 'Çevirici', portfolio: 'Portföy',
     assetConverter: 'Varlık Çevirici', from: 'Bundan', to: 'Buna', amount: 'Miktar', result: 'Sonuç',
-    search: 'Varlık ara...', crypto: 'Kripto', stock: 'Hisse', all: 'Tümü', favorites: 'Favoriler',
+    search: 'Varlık ara...', crypto: 'Kripto', stock: 'Hisse', metal: 'Değerli Madenler', all: 'Tümü', favorites: 'Favoriler',
     asset: 'Varlık', price: 'Fiyat', high: 'Yük.', low: 'Düş.', change: '%24s', loading: 'Yükleniyor...', noResult: 'Sonuç bulunamadı',
     detail: 'Detay', high24h: '24s Y', low24h: '24s D', buySellSignals: 'Al/Sat Sinyalleri', aiAnalyze: 'AI Yorumla',
     chartLoading: 'Grafik verileri çekiliyor...', chartError: 'grafiği yüklenemedi', backendError: 'Backend sunucunun çalıştığından emin olun',
@@ -76,13 +80,14 @@ export const TRANSLATIONS = {
     sector: 'Sektör', industry: 'Endüstri', peRatio: 'F/K Oranı (PE)', eps: 'Hisse Başı Kâr (EPS)', dividendYield: 'Temettü Verimi',
     high52w: '52 Haftalık En Yüksek', low52w: '52 Haftalık En Düşük', employees: 'Çalışan Sayısı', beta: 'Beta', revenue: 'Gelir', profitMargin: 'Kâr Marjı',
     generalInfo: 'Genel Bilgi', loadingInfo: 'Varlık bilgileri getiriliyor...', infoFetchFailed: 'Bilgi alınamadı', checkServer: 'Sunucu bağlantısını kontrol edin.', noNewsForAsset: 'için haber bulunamadı',
-    time4h: '4S', timeMax: 'TÜMÜ', themeLight: 'Aydınlık Mod', themeDark: 'Karanlık Mod'
+    time4h: '4S', timeMax: 'TÜMÜ', themeLight: 'Aydınlık Mod', themeDark: 'Karanlık Mod',
+    STRONG_BUY: 'Güçlü Al', BUY: 'Al', HOLD: 'Beklet', SELL: 'Sat', STRONG_SELL: 'Güçlü Sat'
   },
   EN: {
-    markets: 'Markets', news: 'News', alerts: 'Alerts', mainMenu: 'Main Menu', logout: 'Logout',
+    markets: 'Markets', news: 'News', alerts: 'Alerts', mainMenu: 'Main Menu', logout: 'Logout', goBack: 'Go Back',
     marketView: 'Market Overview', marketNews: 'Market News', priceAlerts: 'Price Alerts', converter: 'Converter', portfolio: 'Portfolio',
     assetConverter: 'Asset Converter', from: 'From', to: 'To', amount: 'Amount', result: 'Result',
-    search: 'Search assets...', crypto: 'Crypto', stock: 'Stock', all: 'All', favorites: 'Favorites',
+    search: 'Search assets...', crypto: 'Crypto', stock: 'Stock', metal: 'Precious Metals', all: 'All', favorites: 'Favorites',
     asset: 'Asset', price: 'Price', high: 'High', low: 'Low', change: '24h%', loading: 'Loading...', noResult: 'No results found',
     detail: 'Details', high24h: '24h H', low24h: '24h L', buySellSignals: 'Buy/Sell Signals', aiAnalyze: 'AI Analyze',
     chartLoading: 'Loading chart data...', chartError: 'chart could not be loaded', backendError: 'Ensure backend server is running',
@@ -101,13 +106,14 @@ export const TRANSLATIONS = {
     sector: 'Sector', industry: 'Industry', peRatio: 'P/E Ratio', eps: 'Earnings Per Share (EPS)', dividendYield: 'Dividend Yield',
     high52w: '52-Week High', low52w: '52-Week Low', employees: 'Employees', beta: 'Beta', revenue: 'Revenue', profitMargin: 'Profit Margin',
     generalInfo: 'General Info', loadingInfo: 'Fetching asset information...', infoFetchFailed: 'Failed to fetch info', checkServer: 'Check server connection.', noNewsForAsset: 'No news found for',
-    time4h: '4H', timeMax: 'MAX', themeLight: 'Light Mode', themeDark: 'Dark Mode'
+    time4h: '4H', timeMax: 'MAX', themeLight: 'Light Mode', themeDark: 'Dark Mode',
+    STRONG_BUY: 'Strong Buy', BUY: 'Buy', HOLD: 'Hold', SELL: 'Sell', STRONG_SELL: 'Strong Sell'
   },
   DE: {
-    markets: 'Märkte', news: 'Nachrichten', alerts: 'Alarme', mainMenu: 'Hauptmenü', logout: 'Abmelden',
+    markets: 'Märkte', news: 'Nachrichten', alerts: 'Alarme', mainMenu: 'Hauptmenü', logout: 'Abmelden', goBack: 'Zurück',
     marketView: 'Marktübersicht', marketNews: 'Marktnachrichten', priceAlerts: 'Preisalarme', converter: 'Konverter', portfolio: 'Portfolio',
     assetConverter: 'Anlagenkonverter', from: 'Von', to: 'Nach', amount: 'Menge', result: 'Ergebnis',
-    search: 'Suchen...', crypto: 'Krypto', stock: 'Aktien', all: 'Alle', favorites: 'Favoriten',
+    search: 'Suchen...', crypto: 'Krypto', stock: 'Aktien', metal: 'Edelmetalle', all: 'Alle', favorites: 'Favoriten',
     asset: 'Anlage', price: 'Preis', high: 'Hoch', low: 'Tief', change: '24h%', loading: 'Wird geladen...', noResult: 'Keine Ergebnisse',
     detail: 'Details', high24h: '24h H', low24h: '24h T', buySellSignals: 'Kauf/Verkauf Signale', aiAnalyze: 'KI Analyse',
     chartLoading: 'Diagrammdaten werden geladen...', chartError: 'Diagramm konnte nicht geladen werden', backendError: 'Stellen Sie sicher, dass der Backend-Server läuft',
@@ -126,13 +132,14 @@ export const TRANSLATIONS = {
     sector: 'Sektor', industry: 'Industrie', peRatio: 'KGV (PE)', eps: 'Gewinn pro Aktie (EPS)', dividendYield: 'Dividendenrendite',
     high52w: '52-Wochen-Hoch', low52w: '52-Wochen-Tief', employees: 'Mitarbeiter', beta: 'Beta', revenue: 'Einnahmen', profitMargin: 'Gewinnmarge',
     generalInfo: 'Allgemeine Infos', loadingInfo: 'Anlageninformationen werden abgerufen...', infoFetchFailed: 'Informationen konnten nicht abgerufen werden', checkServer: 'Überprüfen Sie die Serververbindung.', noNewsForAsset: 'Keine Nachrichten gefunden für',
-    time4h: '4S', timeMax: 'MAX', themeLight: 'Heller Modus', themeDark: 'Dunkler Modus'
+    time4h: '4S', timeMax: 'MAX', themeLight: 'Heller Modus', themeDark: 'Dunkler Modus',
+    STRONG_BUY: 'Starker Kauf', BUY: 'Kaufen', HOLD: 'Halten', SELL: 'Verkaufen', STRONG_SELL: 'Starker Verkauf'
   },
   RU: {
-    markets: 'Рынки', news: 'Новости', alerts: 'Оповещения', mainMenu: 'Главное меню', logout: 'Выйти',
+    markets: 'Рынки', news: 'Новости', alerts: 'Оповещения', mainMenu: 'Главное меню', logout: 'Выйти', goBack: 'Вернуться',
     marketView: 'Обзор рынка', marketNews: 'Новости рынка', priceAlerts: 'Оповещения о ценах', converter: 'Конвертер', portfolio: 'Портфель',
     assetConverter: 'Конвертер активов', from: 'Из', to: 'В', amount: 'Сумма', result: 'Результат',
-    search: 'Поиск...', crypto: 'Крипто', stock: 'Акции', all: 'Все', favorites: 'Избранное',
+    search: 'Поиск...', crypto: 'Крипто', stock: 'Акции', metal: 'Драгоценные металлы', all: 'Все', favorites: 'Избранное',
     asset: 'Актив', price: 'Цена', high: 'Макс.', low: 'Мин.', change: '24ч%', loading: 'Загрузка...', noResult: 'Ничего не найдено',
     detail: 'Детали', high24h: '24ч Макс', low24h: '24ч Мин', buySellSignals: 'Сигналы', aiAnalyze: 'AI Анализ',
     chartLoading: 'Загрузка данных графика...', chartError: 'График не удалось загрузить', backendError: 'Убедитесь, что сервер работает',
@@ -151,7 +158,8 @@ export const TRANSLATIONS = {
     sector: 'Сектор', industry: 'Отрасль', peRatio: 'Отношение P/E', eps: 'Прибыль на акцию (EPS)', dividendYield: 'Дивидендная доходность',
     high52w: '52-недельный максимум', low52w: '52-недельный минимум', employees: 'Сотрудники', beta: 'Бета', revenue: 'Доход', profitMargin: 'Маржа прибыли',
     generalInfo: 'Общая информация', loadingInfo: 'Получение информации об активе...', infoFetchFailed: 'Не удалось получить информацию', checkServer: 'Проверьте соединение с сервером.', noNewsForAsset: 'Нет новостей для',
-    time4h: '4Ч', timeMax: 'МАКС', themeLight: 'Светлая тема', themeDark: 'Темная тема'
+    time4h: '4Ч', timeMax: 'МАКС', themeLight: 'Светлая тема', themeDark: 'Темная тема',
+    STRONG_BUY: 'Строгая покупка', BUY: 'Покупать', HOLD: 'Держать', SELL: 'Продавать', STRONG_SELL: 'Строгая продажа'
   }
 };
 
@@ -160,5 +168,12 @@ export function formatPrice(price, currency = 'USD', rates = { USD: 1 }) {
   const rate = rates[currency] || 1;
   const convertedPrice = price * rate;
   const symbol = CURRENCIES[currency]?.symbol || '$';
-  return `${symbol}${convertedPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  
+  // Küçük değerler için ondalık hane kontrolü
+  let maxFrac = 2;
+  if (convertedPrice < 0.0001) maxFrac = 8;
+  else if (convertedPrice < 0.01) maxFrac = 6;
+  else if (convertedPrice < 1) maxFrac = 4;
+
+  return `${symbol}${convertedPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: maxFrac })}`;
 }

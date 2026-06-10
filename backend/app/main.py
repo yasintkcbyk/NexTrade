@@ -1,4 +1,10 @@
+import logging
 from fastapi import FastAPI
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 from app.routers import stocks, crypto, alerts, ai, market, auth, asset_info, portfolio

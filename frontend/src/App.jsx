@@ -1,19 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
+import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { TrendingUp, BarChart2, Newspaper, Bell, Calculator, LogOut, Wifi, Search, Wallet, Moon, Sun } from 'lucide-react';
 import { useAppContext } from './context/AppContext';
 import { CURRENCIES, LANGUAGES } from './utils/constants';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const PageTransition = ({ children }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 15 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -15 }}
+    transition={{ duration: 0.25, ease: "easeOut" }}
+    style={{ width: '100%', height: '100%' }}
+  >
+    {children}
+  </motion.div>
+);
 
 import TickerBand from './components/TickerBand';
 import AIChat from './components/AIChat';
 import LoginPage from './components/LoginPage';
 
-import MarketPage from './pages/MarketPage';
-import NewsPage from './pages/NewsPage';
-import AlertsPage from './pages/AlertsPage';
-import ConverterPage from './pages/ConverterPage';
-import PortfolioPage from './pages/PortfolioPage';
-import AssetPage from './pages/AssetPage';
+const MarketPage = lazy(() => import('./pages/MarketPage'));
+const NewsPage = lazy(() => import('./pages/NewsPage'));
+const AlertsPage = lazy(() => import('./pages/AlertsPage'));
+const ConverterPage = lazy(() => import('./pages/ConverterPage'));
+const PortfolioPage = lazy(() => import('./pages/PortfolioPage'));
+const AssetPage = lazy(() => import('./pages/AssetPage'));
 
 function AppLayout() {
   const { user, handleLogout, activeModule, marketData, currency, setCurrency, rates, lang, setLang, t, theme, setTheme, lastUpdated } = useAppContext();
@@ -158,21 +172,28 @@ function AppLayout() {
         </div>
 
         <div className="module-area">
-          <Routes>
-            <Route path="/" element={
-              <MarketPage 
-                activeTab={activeTab} setActiveTab={setActiveTab} 
-                selectedAsset={selectedAsset} setSelectedAsset={setSelectedAsset} 
-                setSelectedForDetail={setSelectedForDetail} 
-                selectedForDetail={selectedForDetail}
-              />
-            } />
-            <Route path="/portfolio" element={<PortfolioPage />} />
-            <Route path="/news" element={<NewsPage />} />
-            <Route path="/alerts" element={<AlertsPage />} />
-            <Route path="/converter" element={<ConverterPage />} />
-            <Route path="/asset/:id" element={<AssetPage />} />
-          </Routes>
+          <Suspense fallback={<div style={{ padding: 20, color: 'var(--text-primary)' }} className="skeleton skeleton-card"></div>}>
+            <AnimatePresence mode="wait">
+              <Routes location={location} key={location.pathname}>
+                <Route path="/" element={
+                  <PageTransition>
+                    <MarketPage 
+                      activeTab={activeTab} setActiveTab={setActiveTab} 
+                      selectedAsset={selectedAsset} setSelectedAsset={setSelectedAsset} 
+                      setSelectedForDetail={setSelectedForDetail} 
+                      selectedForDetail={selectedForDetail}
+                    />
+                  </PageTransition>
+                } />
+                <Route path="/portfolio" element={<PageTransition><PortfolioPage /></PageTransition>} />
+                <Route path="/news" element={<PageTransition><NewsPage onSummarizeNews={handleSummarizeNews} /></PageTransition>} />
+                <Route path="/alerts" element={<PageTransition><AlertsPage /></PageTransition>} />
+                <Route path="/converter" element={<PageTransition><ConverterPage /></PageTransition>} />
+                <Route path="/asset/:id" element={<PageTransition><AssetPage /></PageTransition>} />
+                <Route path="*" element={<PageTransition><div style={{ padding: 20, color: 'var(--text-primary)' }}>Page Not Found</div></PageTransition>} />
+              </Routes>
+            </AnimatePresence>
+          </Suspense>
         </div>
       </div>
 
@@ -182,8 +203,44 @@ function AppLayout() {
 }
 
 export default function App() {
-  const { user } = useAppContext();
-  if (!user) return <LoginPage />;
+  const { user, handleLogin, handleLogout } = useAppContext();
+  const [sessionExpired, setSessionExpired] = React.useState(false);
+
+  // 401 interceptor — oturum süresinin dolduğunu kullanıcıya göster
+  React.useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response && error.response.status === 401 && user) {
+          handleLogout();
+          setSessionExpired(true);
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => axios.interceptors.response.eject(interceptor);
+  }, [user, handleLogout]);
+
+  if (!user) {
+    return (
+      <>
+        <LoginPage onLogin={handleLogin} />
+        {sessionExpired && (
+          <div style={{
+            position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+            background: 'rgba(244,63,94,0.15)', border: '1px solid rgba(244,63,94,0.35)',
+            backdropFilter: 'blur(20px)', padding: '12px 24px', borderRadius: 12,
+            color: '#f43f5e', fontSize: 13, fontWeight: 600,
+            fontFamily: 'Space Grotesk, sans-serif', zIndex: 9999,
+            display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 8px 32px rgba(0,0,0,0.4)'
+          }}>
+            ⚠️ Oturumunuz sona erdi. Lütfen tekrar giriş yapın.
+          </div>
+        )}
+      </>
+    );
+  }
+
   return (
     <Router>
       <AppLayout />

@@ -64,32 +64,131 @@
 
 /* Light Theme Overrides */
 .theme-light {
-  --bg-darkest:     #f1f5f9;
-  --bg-dark:        #f8fafc;
+  /* Arka plan: Saf beyaz yerine sıcak krem-gri tonlar */
+  --bg-darkest:     #eef1f7;
+  --bg-dark:        #f4f6fb;
   --bg-card:        #ffffff;
-  --bg-card-hover:  #f1f5f9;
-  --bg-elevated:    #ffffff;
+  --bg-card-hover:  #f0f4fd;
+  --bg-elevated:    #fafbff;
   
-  --border-subtle:  rgba(15, 23, 42, 0.06);
-  --border-normal:  rgba(15, 23, 42, 0.12);
-  --border-bright:  rgba(15, 23, 42, 0.2);
+  --border-subtle:  rgba(71, 97, 155, 0.1);
+  --border-normal:  rgba(71, 97, 155, 0.18);
+  --border-bright:  rgba(71, 97, 155, 0.32);
   
-  --text-primary:   #0f172a;
-  --text-secondary: #334155;
-  --text-muted:     #64748b;
-  --text-dim:       #94a3b8;
+  /* Metin: Sert siyah yerine lacivert tonlar */
+  --text-primary:   #1a2540;
+  --text-secondary: #3d5280;
+  --text-muted:     #6b7fa8;
+  --text-dim:       #9aaac8;
   
-  --glow-cyan:      0 0 20px rgba(0, 212, 255, 0.15);
-  --glow-blue:      0 0 30px rgba(68, 136, 255, 0.12);
-  --glow-purple:    0 0 25px rgba(168, 85, 247, 0.12);
+  /* Glow efektleri light modda daha hafif */
+  --glow-cyan:      0 0 16px rgba(0, 180, 216, 0.12);
+  --glow-blue:      0 0 20px rgba(68, 136, 255, 0.1);
+  --glow-purple:    0 0 18px rgba(124, 58, 237, 0.1);
   
-  --shadow-card:    0 4px 12px rgba(15, 23, 42, 0.03), 0 1px 3px rgba(15, 23, 42, 0.05);
-  --shadow-modal:   0 20px 40px rgba(15, 23, 42, 0.08), 0 0 0 1px var(--border-normal);
+  /* Gölge: daha belirgin ama yumuşak */
+  --shadow-card:    0 2px 12px rgba(26, 37, 64, 0.07), 0 1px 4px rgba(26, 37, 64, 0.05);
+  --shadow-modal:   0 16px 48px rgba(26, 37, 64, 0.12), 0 0 0 1px var(--border-normal);
   
-  --gradient-sidebar: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  --gradient-card:    linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,1) 100%);
-  --gradient-header:  linear-gradient(90deg, rgba(68,136,255,0.05) 0%, rgba(168,85,247,0.05) 100%);
+  --gradient-sidebar: linear-gradient(180deg, #f4f6fb 0%, #eef1f7 100%);
+  --gradient-card:    linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(244,246,251,0.9) 100%);
+  --gradient-header:  linear-gradient(90deg, rgba(68,136,255,0.06) 0%, rgba(124,58,237,0.04) 100%);
 }
+
+/* === LIGHT TEMA: KOMPONENT ÖZEL GEÇİŞLER === */
+/* Inline dark renk kullanan componentleri light modda doğru göstermek için */
+
+.theme-light .topbar {
+  background: rgba(244, 246, 251, 0.97);
+  border-bottom-color: var(--border-subtle);
+}
+
+.theme-light .sidebar::after {
+  background: linear-gradient(180deg, transparent, rgba(68,136,255,0.15), transparent);
+}
+
+.theme-light .ticker-container {
+  background: linear-gradient(90deg, #f4f6fb 0%, rgba(244,246,251,0.95) 50%, #f4f6fb 100%);
+}
+
+.theme-light .ticker-container::before {
+  background: linear-gradient(90deg, #f4f6fb, transparent);
+}
+
+.theme-light .ticker-container::after {
+  background: linear-gradient(-90deg, #f4f6fb, transparent);
+}
+
+.theme-light .timeframe-group {
+  background: rgba(238, 241, 247, 0.9);
+}
+
+.theme-light .nav-btn:hover {
+  background: rgba(68, 136, 255, 0.07);
+  color: var(--text-secondary);
+}
+
+.theme-light .nav-btn.active {
+  background: linear-gradient(135deg, rgba(68,136,255,0.12), rgba(124,58,237,0.07));
+  border-color: rgba(68,136,255,0.2);
+}
+
+.theme-light .asset-row:hover {
+  background: rgba(68, 136, 255, 0.04);
+}
+
+.theme-light .asset-row.selected {
+  background: rgba(68, 136, 255, 0.07);
+}
+
+.theme-light .market-tab.active {
+  background: rgba(68, 136, 255, 0.06);
+}
+
+/* Modal ve panel arka planları */
+.theme-light .detail-drawer,
+.theme-light .analysis-modal-box {
+  background: #ffffff !important;
+  border-color: var(--border-normal) !important;
+}
+
+/* Haber kartları */
+.theme-light .news-card {
+  background: #ffffff;
+  box-shadow: var(--shadow-card);
+}
+
+.theme-light .news-card:hover {
+  background: #f4f6fb;
+  border-color: rgba(68, 136, 255, 0.2);
+}
+
+/* Scrollbar light modda */
+.theme-light ::-webkit-scrollbar-thumb {
+  background: rgba(71, 97, 155, 0.2);
+}
+
+.theme-light ::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-blue);
+}
+
+/* Login sayfası light mod */
+.theme-light .login-bg {
+  background: linear-gradient(135deg, #eef1f7 0%, #e8edf8 100%);
+}
+
+/* Input alanları */
+.theme-light .login-input {
+  background: rgba(238, 241, 247, 0.8);
+  border-color: var(--border-normal);
+  color: var(--text-primary);
+}
+
+.theme-light .login-card {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: var(--border-normal);
+}
+
 
 /* ============================================================
    RESET & BASE
@@ -1862,6 +1961,25 @@ code, .mono {
    RESPONSIVE TWEAKS
    ============================================================ */
 
+/* ============================================================
+   SKELETON LOADERS
+   ============================================================ */
+
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-elevated) 25%, rgba(68,136,255,0.1) 50%, var(--bg-elevated) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+  border-radius: var(--radius-md);
+}
+.skeleton-text { height: 14px; width: 80%; margin-bottom: 6px; }
+.skeleton-text.short { width: 40%; }
+.skeleton-avatar { width: 40px; height: 40px; border-radius: 50%; }
+.skeleton-card { height: 120px; width: 100%; }
+
+/* ============================================================
+   RESPONSIVE TWEAKS & MOBILE SUPPORT
+   ============================================================ */
+
 @media (max-width: 1200px) {
   .market-list-panel { width: 360px; min-width: 360px; }
 }
@@ -1873,6 +1991,27 @@ code, .mono {
   .nav-btn { justify-content: center; padding: 12px; }
   .sidebar-logo { justify-content: center; padding: 16px; }
 }
+
+@media (max-width: 768px) {
+  .app-layout { flex-direction: column; overflow-y: auto; overflow-x: hidden; }
+  .sidebar { width: 100%; min-width: 100%; height: auto; flex-direction: row; align-items: center; justify-content: space-between; border-right: none; border-bottom: 1px solid var(--border-subtle); z-index: 100; padding: 0 16px; }
+  .sidebar-logo { border-bottom: none; padding: 10px 0; }
+  .sidebar-nav { flex-direction: row; padding: 0; gap: 8px; overflow-x: auto; flex: 1; margin-left: 16px; }
+  .nav-btn { width: auto; padding: 8px; border-radius: 50%; }
+  .nav-section-label, .sidebar-user { display: none; }
+  
+  .market-layout { flex-direction: column-reverse; overflow: visible; }
+  .market-list-panel { width: 100%; min-width: 100%; border-right: none; border-top: 1px solid var(--border-subtle); height: 50vh; }
+  
+  .topbar { padding: 0 16px; }
+  .search-bar { width: 180px; }
+  
+  .analysis-modal-box { width: 95%; max-height: 90vh; }
+  .chat-panel { position: fixed; inset: 0; z-index: 200; width: 100%; height: 100%; border-radius: 0; }
+  
+  body { overflow: auto; }
+}
+
 
 /* ============================================================
    MISC

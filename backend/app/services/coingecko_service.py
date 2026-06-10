@@ -1,41 +1,21 @@
+import logging
 import requests
-import urllib3
 from datetime import datetime, timedelta
 import yfinance as yf
-import random
+from fastapi import HTTPException
 from app.services.analysis_service import get_sma_crossover_signals
+from app.utils.constants import COIN_MAP
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
+logger = logging.getLogger(__name__)
 def get_crypto_data(coin_id: str):
     """
     Güvenli İnternet filtresine takılmamak için Türkiye'nin yasal ve resmi
     borsası BtcTurk API'sini kullanır.
     Örnek coin_id: bitcoin, btc, ethereum, eth
     """
-    coin_map = {
-        "bitcoin": "BTC",
-        "ethereum": "ETH",
-        "solana": "SOL",
-        "ripple": "XRP",
-        "cardano": "ADA",
-        "avalanche": "AVAX",
-        "dogecoin": "DOGE",
-        "binancecoin": "BNB",
-        "polkadot": "DOT",
-        "chainlink": "LINK",
-        "matic-network": "POL",
-        "tron": "TRX",
-        "shiba-inu": "SHIB",
-        "litecoin": "LTC",
-        "the-open-network": "TON",
-        "uniswap": "UNI"
-    }
-    
-    symbol = coin_map.get(coin_id.lower(), coin_id.upper())
+    symbol = COIN_MAP.get(coin_id.lower(), coin_id.upper())
     
     session = requests.Session()
-    session.verify = False
     session.trust_env = False
     session.headers.update({"User-Agent": "Mozilla/5.0"})
 
@@ -66,8 +46,8 @@ def get_crypto_data(coin_id: str):
                     "price_usd": round(price_usd, 2),
                     "price_try": round(price_try, 2)
                 }
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"Error fetching data from BtcTurk for {symbol}: {e}")
 
     # BtcTurk'te desteklenmeyen coinler (BNB vb.) için yfinance Fallback (Yedek) Planı
     try:
@@ -80,10 +60,10 @@ def get_crypto_data(coin_id: str):
                 "price_usd": round(price_usd, 2),
                 "price_try": 0
             }
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"Error fetching data from yfinance for {symbol}: {e}")
 
-    return {"error": f"Kripto para bulunamadı ({symbol})."}
+    raise HTTPException(status_code=404, detail=f"Kripto para bulunamadı ({symbol}).")
 
 def get_crypto_history(coin_id: str, interval: str = '1D'):
     """
@@ -104,13 +84,7 @@ def get_crypto_history(coin_id: str, interval: str = '1D'):
     params = interval_map.get(interval, {"interval": "1d", "limit": 300})
 
     # Coin ID'yi Binance formatına (örn: BTCUSDT) çeviriyoruz
-    coin_map = {
-        "bitcoin": "BTC", "ethereum": "ETH", "solana": "SOL", "ripple": "XRP",
-        "cardano": "ADA", "avalanche": "AVAX", "dogecoin": "DOGE", "binancecoin": "BNB",
-        "polkadot": "DOT", "chainlink": "LINK", "matic-network": "POL", "tron": "TRX",
-        "shiba-inu": "SHIB", "litecoin": "LTC", "the-open-network": "TON", "uniswap": "UNI"
-    }
-    base_symbol = coin_map.get(coin_id.lower(), coin_id.upper())
+    base_symbol = COIN_MAP.get(coin_id.lower(), coin_id.upper())
     symbol = f"{base_symbol}USDT"
     
     try:
@@ -142,60 +116,35 @@ def get_crypto_history(coin_id: str, interval: str = '1D'):
             })
         return chart_data
     except Exception as e:
-        print(f"Binance geçmişi çekilemedi ({coin_id}): {e}")
-        # Fallback: Eğer Binance USDT çiftini bulamazsa (çok nadir, belki POL gibi yeni coinler)
-        # Hata fırlatmak yerine boş döndürebilir veya eski dummy veriyi dönebiliriz.
-        chart_data = []
-        base_price = 65000.0 if "btc" in symbol.lower() else 3000.0
-        for i in range(30, -1, -1):
-            timestamp = int((datetime.now() - timedelta(days=i)).timestamp())
-            open_price = base_price + random.uniform(-500, 500)
-            close_price = open_price + random.uniform(-1000, 1000)
-            chart_data.append({
-                "time": timestamp,
-                "open": round(open_price, 2),
-                "high": round(max(open_price, close_price) + random.uniform(0, 500), 2),
-                "low": round(min(open_price, close_price) - random.uniform(0, 500), 2),
-                "close": round(close_price, 2),
-                "volume": random.uniform(100, 5000)
-            })
-            base_price = close_price
-        return chart_data
+        logger.error(f"Binance geçmişi çekilemedi ({coin_id}): {e}")
+        return []
 
-def get_crypto_signals(coin_id: str):
-    coin_map = {
-        "bitcoin": "BTC-USD", "ethereum": "ETH-USD", "solana": "SOL-USD",
-        "ripple": "XRP-USD", "cardano": "ADA-USD", "avalanche": "AVAX-USD", "dogecoin": "DOGE-USD",
-        "binancecoin": "BNB-USD", "polkadot": "DOT-USD", "chainlink": "LINK-USD", "matic-network": "POL-USD", "tron": "TRX-USD",
-        "shiba-inu": "SHIB-USD", "litecoin": "LTC-USD", "the-open-network": "TON-USD", "uniswap": "UNI-USD"
-    }
-    symbol = coin_map.get(coin_id.lower(), f"{coin_id.upper()}-USD")
+def get_crypto_signals(coin_id: str, interval: str = '1D'):
     try:
-        ticker = yf.Ticker(symbol)
-        hist = ticker.history(period="1y", interval="1d")
-        if hist.empty:
-            raise ValueError("Boş veri")
-        return get_sma_crossover_signals(hist)
-    except Exception:
-        # İnternet engeli varsa çökmek yerine grafiğe yedek (sahte) sinyaller basar
-        signals = []
-        for i in [28, 21, 14, 7]:
-            date = (datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d')
-            is_buy = random.choice([True, False])
-            if is_buy:
-                signals.append({"time": date, "position": "belowBar", "color": "#1E88E5", "shape": "arrowUp", "text": "AL"})
-            else:
-                signals.append({"time": date, "position": "aboveBar", "color": "#FFB300", "shape": "arrowDown", "text": "SAT"})
-        return sorted(signals, key=lambda x: x['time'])
+        # Tıpkı grafikte olduğu gibi, Binance üzerinden doğru zaman dilimi verisini al
+        chart_data = get_crypto_history(coin_id, interval)
+        if not chart_data:
+            return []
+            
+        import pandas as pd
+        df = pd.DataFrame(chart_data)
+        # Sütun isimlerini yfinance formatına (veya analysis_service'in beklediği formata) uyduralım
+        # analysis_service 'Close' veya direkt df kullanıyor mu? Sütunlar: open, high, low, close
+        # pandas_ta sütun isimlerinin büyük harfle olmasını sevmiyor olabilir ama varsayılan df'i kabul eder.
+        df.rename(columns={'close': 'Close', 'open': 'Open', 'high': 'High', 'low': 'Low'}, inplace=True)
+        
+        # 'time' unix timestamp'ten datetime objesine
+        df['time'] = pd.to_datetime(df['time'], unit='s')
+        df.set_index('time', inplace=True)
+        
+        return get_sma_crossover_signals(df)
+    except Exception as e:
+        logger.error(f"Error fetching signals for {coin_id}: {e}")
+        return []
 
 def get_crypto_news(coin_id: str):
-    coin_map = {
-        "bitcoin": "BTC-USD", "ethereum": "ETH-USD", "solana": "SOL-USD",
-        "ripple": "XRP-USD", "cardano": "ADA-USD", "avalanche": "AVAX-USD", "dogecoin": "DOGE-USD",
-        "binancecoin": "BNB-USD", "polkadot": "DOT-USD", "chainlink": "LINK-USD", "matic-network": "POL-USD", "tron": "TRX-USD",
-        "shiba-inu": "SHIB-USD", "litecoin": "LTC-USD", "the-open-network": "TON-USD", "uniswap": "UNI-USD"
-    }
-    symbol = coin_map.get(coin_id.lower(), f"{coin_id.upper()}-USD")
+    base_symbol = COIN_MAP.get(coin_id.lower(), coin_id.upper())
+    symbol = f"{base_symbol}-USD"
     try:
         ticker = yf.Ticker(symbol)
         news = ticker.news
@@ -214,5 +163,6 @@ def get_crypto_news(coin_id: str):
                 "timestamp": timestamp
             })
         return formatted_news
-    except Exception:
+    except Exception as e:
+        logger.error(f"Error fetching news for {coin_id}: {e}")
         return []

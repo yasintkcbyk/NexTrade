@@ -1,8 +1,9 @@
 import requests
 import yfinance as yf
 import urllib3
+import logging
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+logger = logging.getLogger(__name__)
 
 # CoinGecko'da kullanılan ID'ler ile bizim internal ID'lerimizin haritası
 COINGECKO_ID_MAP = {
@@ -26,12 +27,11 @@ def get_coin_detail(coin_id: str) -> dict:
     """
     try:
         session = requests.Session()
-        session.verify = False
         session.headers.update({"User-Agent": "Mozilla/5.0", "Accept": "application/json"})
         
         url = f"https://api.coingecko.com/api/v3/coins/{coin_id}"
         params = {
-            "localization": "false",
+            "localization": "true",
             "tickers": "false",
             "market_data": "true",
             "community_data": "false",
@@ -50,7 +50,7 @@ def get_coin_detail(coin_id: str) -> dict:
             "id": coin_id,
             "name": data.get("name", ""),
             "symbol": data.get("symbol", "").upper(),
-            "description": data.get("description", {}).get("en", "")[:500] if data.get("description") else "",
+            "description": data.get("description", {}) if data.get("description") else {"en": ""},
             "image": data.get("image", {}).get("large", ""),
             "genesis_date": data.get("genesis_date", ""),
             "hashing_algorithm": data.get("hashing_algorithm", ""),
@@ -74,7 +74,7 @@ def get_coin_detail(coin_id: str) -> dict:
             "source": "coingecko"
         }
     except Exception as e:
-        print(f"CoinGecko detay çekilemedi ({coin_id}): {e}")
+        logger.error(f"CoinGecko detay çekilemedi ({coin_id}): {e}")
         return _get_fallback_coin_info(coin_id)
 
 
@@ -118,7 +118,7 @@ def get_stock_detail(symbol: str) -> dict:
             "source": "yfinance"
         }
     except Exception as e:
-        print(f"Hisse detay çekilemedi ({symbol}): {e}")
+        logger.error(f"Hisse detay çekilemedi ({symbol}): {e}")
         return _get_fallback_stock_info(symbol)
 
 
@@ -127,7 +127,12 @@ def _get_fallback_coin_info(coin_id: str) -> dict:
     STATIC_COIN_INFO = {
         "bitcoin": {
             "name": "Bitcoin", "symbol": "BTC",
-            "description": "Bitcoin, 2008 yılında Satoshi Nakamoto tarafından icat edilen, merkezi olmayan ilk dijital para birimidir. Blockchain teknolojisini kullanan Bitcoin, aracısız para transferine olanak sağlar.",
+            "description": {
+                "tr": "Bitcoin, 2008 yılında Satoshi Nakamoto tarafından icat edilen, merkezi olmayan ilk dijital para birimidir.",
+                "en": "Bitcoin is the first decentralized digital currency, invented by Satoshi Nakamoto in 2008.",
+                "ru": "Биткойн - первая децентрализованная цифровая валюта, изобретенная Сатоши Накамото в 2008 году.",
+                "de": "Bitcoin ist die erste dezentrale digitale Währung, die 2008 von Satoshi Nakamoto erfunden wurde."
+            },
             "genesis_date": "2009-01-03", "hashing_algorithm": "SHA-256",
             "market_cap_rank": 1, "max_supply": 21000000,
             "homepage": "https://bitcoin.org", "whitepaper": "https://bitcoin.org/bitcoin.pdf",
@@ -136,7 +141,12 @@ def _get_fallback_coin_info(coin_id: str) -> dict:
         },
         "ethereum": {
             "name": "Ethereum", "symbol": "ETH",
-            "description": "Ethereum, Vitalik Buterin tarafından 2015'te geliştirilen, akıllı sözleşmeler ve merkeziyetsiz uygulamalar (DApps) için platform sağlayan blok zinciridir.",
+            "description": {
+                "tr": "Ethereum, akıllı sözleşmeler ve merkeziyetsiz uygulamalar için platform sağlayan blok zinciridir.",
+                "en": "Ethereum is a decentralized blockchain platform that establishes a peer-to-peer network that securely executes and verifies application code.",
+                "ru": "Эфириум - это платформа для создания децентрализованных онлайн-сервисов на базе блокчейна.",
+                "de": "Ethereum ist eine Open-Source-Softwareplattform, die auf Blockchain-Technologie basiert."
+            },
             "genesis_date": "2015-07-30", "hashing_algorithm": "Ethash (now PoS)",
             "market_cap_rank": 2, "max_supply": None,
             "homepage": "https://ethereum.org", "whitepaper": "https://ethereum.org/en/whitepaper/",
@@ -145,7 +155,12 @@ def _get_fallback_coin_info(coin_id: str) -> dict:
         },
         "solana": {
             "name": "Solana", "symbol": "SOL",
-            "description": "Solana, Anatoly Yakovenko tarafından 2020'de kurulan, yüksek hız ve düşük işlem maliyetiyle öne çıkan akıllı sözleşme platformudur.",
+            "description": {
+                "tr": "Solana, yüksek hız ve düşük işlem maliyetiyle öne çıkan akıllı sözleşme platformudur.",
+                "en": "Solana is a highly functional open source project that banks on blockchain technology's permissionless nature to provide decentralized finance.",
+                "ru": "Solana - это высокопроизводительный блокчейн, поддерживающий создание масштабируемых децентрализованных приложений.",
+                "de": "Solana ist eine dezentrale Blockchain, die skalierbare, benutzerfreundliche Apps für die Welt entwickelt."
+            },
             "genesis_date": "2020-03-16", "hashing_algorithm": "Proof of History (PoH)",
             "market_cap_rank": 5, "max_supply": None,
             "homepage": "https://solana.com", "whitepaper": "https://solana.com/solana-whitepaper.pdf",
@@ -177,7 +192,13 @@ def _get_fallback_coin_info(coin_id: str) -> dict:
 def _get_fallback_stock_info(symbol: str) -> dict:
     return {
         "id": symbol, "name": symbol, "symbol": symbol.upper(),
-        "description": "Hisse senedi detayları şu an alınamıyor.", "sector": "", "industry": "",
+        "description": {
+            "tr": "Hisse senedi detayları şu an alınamıyor.",
+            "en": "Stock details are currently unavailable.",
+            "ru": "Подробности об акции в данный момент недоступны.",
+            "de": "Aktiendetails sind derzeit nicht verfügbar."
+        },
+        "sector": "", "industry": "",
         "country": "", "employees": 0, "website": "", "market_cap_usd": 0,
         "pe_ratio": 0, "dividend_yield": 0, "eps": 0, "52w_high": 0, "52w_low": 0,
         "image": "", "source": "static_fallback"

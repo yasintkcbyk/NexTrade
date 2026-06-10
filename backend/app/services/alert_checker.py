@@ -4,6 +4,8 @@ from app.services.yfinance_service import get_stock_data
 from app.services.telegram_service import send_telegram_alert
 from app.database import SessionLocal
 from app.models import Alert
+import logging
+from sqlalchemy.orm import joinedload
 from app.services.market_service import CRYPTO_ASSETS
 
 def fetch_price_sync(symbol: str):
@@ -20,20 +22,22 @@ async def check_prices_periodically():
     """
     Arka planda sürekli çalışarak fiyatları kontrol eder.
     """
+    logger = logging.getLogger(__name__)
     while True:
         db = SessionLocal()
         try:
-            alerts = db.query(Alert).all()
+            alerts = db.query(Alert).options(joinedload(Alert.owner)).filter(Alert.is_triggered == False).all()
             
-            # Aynı sembol için birden fazla alarm varsa, fiyatı internetten sadece 1 kez çek (Hız Optimizasyonu)
-            unique_symbols = {alert.symbol for alert in alerts}
-            prices = {}
+            if not alerts:
+                db.close()
+                await asyncio.sleep(60)
+                continue
+                
+            unique_symbols = list({alert.symbol for alert in alerts})
             
-            for symbol in unique_symbols:
-                # Ağ isteklerini ana döngüyü kilitlemeden paralel thread'lerde yap
-                price = await asyncio.to_thread(fetch_price_sync, symbol)
-                if price is not None:
-                    prices[symbol] = price
+            tasks = [asyncio.to_thread(fetch_price_sync, symbol) for symbol in unique_symbols]
+            results = await asyncio.gather(*tasks)
+            prices = dict(zip(unique_symbols, results))
 
             for alert in alerts:
                 current_price = prices.get(alert.symbol)
@@ -42,17 +46,16 @@ async def check_prices_periodically():
                 if current_price is not None and chat_id:
                     if alert.condition == "greater" and current_price >= alert.target_price:
                         await asyncio.to_thread(send_telegram_alert, f"🚨 *FİYAT ALARMI*\n\n{alert.symbol.upper()} hedefe ulaştı!\nGüncel Fiyat: *${current_price}*", chat_id)
-                        db.delete(alert) # Alarm bir kere çalınca veritabanından silinir
+                        alert.is_triggered = True
                         db.commit()
                         
                     elif alert.condition == "less" and current_price <= alert.target_price:
                         await asyncio.to_thread(send_telegram_alert, f"🚨 *FİYAT ALARMI*\n\n{alert.symbol.upper()} düştü!\nGüncel Fiyat: *${current_price}*", chat_id)
-                        db.delete(alert)
+                        alert.is_triggered = True
                         db.commit()
         except Exception as e:
-            print(f"Alarm kontrolü sırasında hata oluştu: {e}")
+            logger.error(f"Alarm kontrolü sırasında hata oluştu: {e}")
         finally:
             db.close()
 
-        # Her 60 saniyede bir fiyatları kontrol et (Test için istersen 10 saniye yapabilirsin)
         await asyncio.sleep(60)

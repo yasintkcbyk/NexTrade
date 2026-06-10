@@ -4,14 +4,24 @@ from app.services.telegram_service import send_telegram_alert
 from app.database import SessionLocal, get_db
 from app.models import Alert, User
 from app.routers.auth import get_current_user
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from enum import Enum
 
 router = APIRouter(prefix="/api/alerts", tags=["Alerts"])
 
+class AssetType(str, Enum):
+    crypto = "crypto"
+    stock = "stock"
+    metal = "metal"
+
+class AlertCondition(str, Enum):
+    greater = "greater"
+    less = "less"
+
 class AlertCreate(BaseModel):
     symbol: str
-    target_price: float
-    condition: str
+    target_price: float = Field(gt=0)
+    condition: AlertCondition
 
 @router.get("/")
 def get_alerts(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):

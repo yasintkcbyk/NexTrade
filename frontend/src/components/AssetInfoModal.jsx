@@ -32,18 +32,36 @@ function formatSupply(num) {
   return num.toLocaleString();
 }
 
+import { useAppContext } from '../context/AppContext';
+
 function CryptoInfo({ info, currency, rates, t }) {
+  const { language } = useAppContext();
   const sym = CURRENCIES[currency]?.symbol || '$';
   const rate = rates[currency] || 1;
   const ath = info.ath_usd ? (info.ath_usd * rate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : '—';
 
+  // Retrieve localized description
+  let desc = '';
+  if (info.description) {
+    if (typeof info.description === 'string') {
+      desc = info.description;
+    } else {
+      desc = info.description[language?.toLowerCase()] || info.description['en'] || '';
+    }
+  }
+
+  // Yalnızca çok uzunsa keselim (önceden backend kesiyordu)
+  if (desc && desc.length > 800) {
+    desc = desc.substring(0, 800) + '...';
+  }
+
   return (
     <div className="animate-fadeIn">
       {/* Description */}
-      {info.description && (
+      {desc && (
         <div className="description-box" style={{ marginBottom: 16 }}>
           <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-dim)', marginBottom: 8 }}>{t('about')}</div>
-          {info.description}
+          {desc}
         </div>
       )}
 
@@ -139,6 +157,25 @@ function CryptoInfo({ info, currency, rates, t }) {
         )}
       </div>
 
+      {/* İnfografik: Arz Oranı */}
+      {info.circulating_supply && info.max_supply && (
+        <div style={{ marginTop: 24, padding: 16, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-lg)' }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 12, display: 'flex', justifyContent: 'space-between' }}>
+            <span>Arz Dağılımı İnfografiği</span>
+            <span style={{ color: 'var(--accent-purple)' }}>
+              %{((info.circulating_supply / info.max_supply) * 100).toFixed(1)} Piyasada
+            </span>
+          </div>
+          <div style={{ position: 'relative', height: 12, background: 'rgba(255,255,255,0.1)', borderRadius: 6, overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${Math.min(100, (info.circulating_supply / info.max_supply) * 100)}%`, background: 'linear-gradient(90deg, var(--accent-purple), var(--accent-blue))', borderRadius: 6 }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-dim)', marginTop: 8, fontWeight: 600 }}>
+            <span>{formatSupply(info.circulating_supply)} (Dolaşan)</span>
+            <span>{formatSupply(info.max_supply)} (Maksimum)</span>
+          </div>
+        </div>
+      )}
+
       {info.source === 'static_fallback' && (
         <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-dim)', background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.1)', padding: '8px 12px', borderRadius: 'var(--radius-md)' }}>
           <AlertCircle size={12} style={{ color: 'var(--accent-amber)' }} />
@@ -150,13 +187,24 @@ function CryptoInfo({ info, currency, rates, t }) {
 }
 
 function StockInfo({ info, currency, rates, t }) {
+  const { language } = useAppContext();
   const sym = CURRENCIES[currency]?.symbol || '$';
   const rate = rates[currency] || 1;
 
+  // Retrieve localized description (for fallbacks or if yfinance ever supports it)
+  let desc = '';
+  if (info.description) {
+    if (typeof info.description === 'string') {
+      desc = info.description;
+    } else {
+      desc = info.description[language?.toLowerCase()] || info.description['en'] || '';
+    }
+  }
+
   return (
     <div className="animate-fadeIn">
-      {info.description && (
-        <div className="description-box" style={{ marginBottom: 16 }}>{info.description}</div>
+      {desc && (
+        <div className="description-box" style={{ marginBottom: 16 }}>{desc}</div>
       )}
 
       <div className="info-grid">
@@ -224,6 +272,37 @@ function StockInfo({ info, currency, rates, t }) {
             style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 14px', background: 'rgba(68,136,255,0.1)', border: '1px solid rgba(68,136,255,0.2)', borderRadius: 'var(--radius-full)', fontSize: 11.5, fontWeight: 600, color: 'var(--accent-blue)', textDecoration: 'none' }}>
             <Globe size={12} /> {info.website}
           </a>
+        </div>
+      )}
+
+      {/* İnfografik: 52 Haftalık Fiyat Barı */}
+      {info['52w_high'] && info['52w_low'] && (
+        <div style={{ marginTop: 24, padding: 16, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-lg)' }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 12, display: 'flex', justifyContent: 'space-between' }}>
+            <span>52 Haftalık Aralık İnfografiği</span>
+          </div>
+          <div style={{ position: 'relative', height: 12, background: 'rgba(255,255,255,0.1)', borderRadius: 6, overflow: 'hidden' }}>
+            {(() => {
+              const low = info['52w_low'] * rate;
+              const high = info['52w_high'] * rate;
+              // Eğer current price undefined ise varsayılan olarak ortaya koy
+              const current = info.current_price ? (info.current_price * rate) : (low + high) / 2;
+              
+              const range = high - low;
+              const percent = range > 0 ? Math.max(0, Math.min(100, ((current - low) / range) * 100)) : 50;
+              
+              return (
+                <>
+                  <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${percent}%`, background: 'linear-gradient(90deg, var(--accent-red), var(--accent-green))', borderRadius: 6 }} />
+                  <div style={{ position: 'absolute', top: -2, left: `calc(${percent}% - 2px)`, height: 16, width: 4, background: '#fff', borderRadius: 2, boxShadow: '0 0 4px rgba(0,0,0,0.5)' }} />
+                </>
+              );
+            })()}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-dim)', marginTop: 8, fontWeight: 600 }}>
+            <span>{sym}{(info['52w_low'] * rate).toLocaleString(undefined, { maximumFractionDigits: 2 })} (Düşük)</span>
+            <span>{sym}{(info['52w_high'] * rate).toLocaleString(undefined, { maximumFractionDigits: 2 })} (Yüksek)</span>
+          </div>
         </div>
       )}
     </div>
