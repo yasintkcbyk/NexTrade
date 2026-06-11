@@ -265,15 +265,23 @@ async def get_current_market_data():
                         # Extract the specific series for the symbol if it's MultiIndex, else whole df
                         series = yf_data[close_col] if isinstance(close_col, tuple) else yf_data
                         
+                        import math
+                        def safe_float(val):
+                            try:
+                                f = float(val)
+                                return 0.0 if math.isnan(f) else f
+                            except:
+                                return 0.0
+
                         if len(series) >= 2:
-                            last_price = float(series.iloc[-1])
-                            prev_price = float(series.iloc[-2])
+                            last_price = safe_float(series.iloc[-1])
+                            prev_price = safe_float(series.iloc[-2])
                             
                             high_col = ('High', sym) if ('High', sym) in yf_data.columns else 'High'
                             low_col = ('Low', sym) if ('Low', sym) in yf_data.columns else 'Low'
                             
-                            high = float(yf_data[high_col].iloc[-1]) if high_col in yf_data.columns else last_price
-                            low = float(yf_data[low_col].iloc[-1]) if low_col in yf_data.columns else last_price
+                            high = safe_float(yf_data[high_col].iloc[-1]) if high_col in yf_data.columns else last_price
+                            low = safe_float(yf_data[low_col].iloc[-1]) if low_col in yf_data.columns else last_price
                             
                             if sym.endswith(".IS") and try_to_usd_rate > 0:
                                 last_price *= try_to_usd_rate
@@ -288,7 +296,7 @@ async def get_current_market_data():
                             result_map[cid]["high24h"] = round(high, 2)
                             result_map[cid]["low24h"] = round(low, 2)
                         elif len(series) == 1:
-                            last_price = float(series.iloc[-1])
+                            last_price = safe_float(series.iloc[-1])
                             if sym.endswith(".IS") and try_to_usd_rate > 0:
                                 last_price *= try_to_usd_rate
                             result_map[cid]["price"] = round(last_price, 2)
