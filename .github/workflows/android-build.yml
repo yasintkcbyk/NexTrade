@@ -25,6 +25,8 @@ jobs:
       - name: Build Web App
         working-directory: ./frontend
         run: npm run build
+        env:
+          VITE_API_URL: https://nextrade-backend-90w4.onrender.com
 
       - name: Sync Capacitor
         working-directory: ./frontend
