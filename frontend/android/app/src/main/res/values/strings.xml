@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">NexTrade</string>
+    <string name="title_activity_main">NexTrade</string>
+    <string name="package_name">com.yasin.nextrade</string>
+    <string name="custom_url_scheme">com.yasin.nextrade</string>
+</resources>
