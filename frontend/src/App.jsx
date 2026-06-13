@@ -198,7 +198,7 @@ function AppLayout() {
             </AnimatePresence>
           </Suspense>
         </div>
-      </div>
+      </main>
 
       <AIChat selectedAsset={selectedAsset} />
     </div>
