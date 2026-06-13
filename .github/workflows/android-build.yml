@@ -54,7 +54,8 @@ jobs:
         working-directory: ./frontend/android/app/build/outputs/apk/release
         run: |
           keytool -genkey -v -keystore my-release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias my-alias -dname "CN=nextTrade, OU=nextTrade, O=nextTrade, L=Istanbul, S=Istanbul, C=TR" -storepass password -keypass password
-          apksigner sign --ks my-release-key.jks --ks-pass pass:password --key-pass pass:password app-release-unsigned.apk
+          APKSIGNER=$(find $ANDROID_HOME/build-tools -name apksigner | sort -r | head -n 1)
+          $APKSIGNER sign --ks my-release-key.jks --ks-pass pass:password --key-pass pass:password app-release-unsigned.apk
 
       - name: Upload Signed Release APK
         uses: actions/upload-artifact@v4
