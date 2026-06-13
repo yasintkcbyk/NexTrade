@@ -20,10 +20,10 @@
   --border-normal:  rgba(99, 179, 237, 0.15);
   --border-bright:  rgba(99, 179, 237, 0.35);
   
-  --text-primary:   #e2eeff;
-  --text-secondary: #8ba4c8;
-  --text-muted:     #4a6080;
-  --text-dim:       #2a3a55;
+  --text-primary:   #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted:     #94a3b8;
+  --text-dim:       #64748b;
   
   --glow-cyan:      0 0 20px rgba(0, 212, 255, 0.25);
   --glow-blue:      0 0 30px rgba(68, 136, 255, 0.2);
@@ -76,10 +76,10 @@
   --border-bright:  rgba(71, 97, 155, 0.32);
   
   /* Metin: Sert siyah yerine lacivert tonlar */
-  --text-primary:   #1a2540;
-  --text-secondary: #3d5280;
-  --text-muted:     #6b7fa8;
-  --text-dim:       #9aaac8;
+  --text-primary:   #0f172a;
+  --text-secondary: #334155;
+  --text-muted:     #475569;
+  --text-dim:       #64748b;
   
   /* Glow efektleri light modda daha hafif */
   --glow-cyan:      0 0 16px rgba(0, 180, 216, 0.12);

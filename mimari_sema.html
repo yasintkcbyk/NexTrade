@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistem Mimarisi Şeması</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default', // 'dark', 'forest', veya 'neutral' da yapabilirsiniz
+            securityLevel: 'loose'
+        });
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #ffffff;
+            margin: 0;
+        }
+        .diagram-container {
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="diagram-container">
+        <h2>Şekil 1: Bulut Bilişim Sistem Mimarisi</h2>
+        <div class="mermaid">
+            graph TD
+                User([Kullanıcı / İstemci])
+                
+                subgraph Vercel ["Vercel (Frontend Bulut Ağı)"]
+                    React[React Web Arayüzü]
+                end
+                
+                subgraph Render ["Render (PaaS Bulut Sunucusu)"]
+                    FastAPI[Python FastAPI]
+                    DB[(Veritabanı)]
+                end
+                
+                subgraph GitHub ["Kaynak Kod ve CI/CD (GitHub)"]
+                    Repo[GitHub Deposu]
+                    Webhook[Otomatik Webhook]
+                end
+                
+                User <-->|HTTPS İstekleri| React
+                React <-->|REST API İstekleri| FastAPI
+                FastAPI <-->|Veri Okuma/Yazma| DB
+                
+                Repo -->|Yeni Kod Gönderimi| Webhook
+                Webhook -.->|Sürekli Dağıtım| Vercel
+                Webhook -.->|Sürekli Dağıtım| Render
+        </div>
+        <p style="text-align: center; color: #666; font-size: 14px; margin-top: 20px;">
+            Not: Bu sayfaya sağ tıklayıp "Resim Olarak Kaydet" diyebilir veya ekran görüntüsü alabilirsiniz.
+        </p>
+    </div>
+</body>
+</html>

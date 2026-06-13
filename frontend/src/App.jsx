@@ -123,7 +123,7 @@ function AppLayout() {
       </aside>
 
       {/* MAIN CONTENT */}
-      <div className="main-content">
+      <main className="main-content">
         <TickerBand marketData={marketData} currency={currency} rates={rates} />
 
         <div className="topbar">
@@ -142,6 +142,7 @@ function AppLayout() {
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              aria-label={theme === 'dark' ? 'Aydınlık Mod' : 'Karanlık Mod'}
               style={{
                 background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)',
                 width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'var(--transition-fast)'
@@ -151,6 +152,7 @@ function AppLayout() {
               {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
             </button>
             <select
+              aria-label="Dil Seçimi"
               value={lang}
               onChange={e => setLang(e.target.value)}
               style={{ padding: '6px 12px', borderRadius: 'var(--radius-full)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', outline: 'none', fontSize: 12, cursor: 'pointer', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 600 }}
@@ -160,6 +162,7 @@ function AppLayout() {
               ))}
             </select>
             <select
+              aria-label="Para Birimi Seçimi"
               value={currency}
               onChange={e => setCurrency(e.target.value)}
               style={{ padding: '6px 12px', borderRadius: 'var(--radius-full)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', outline: 'none', fontSize: 12, cursor: 'pointer', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 600 }}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>CI/CD Akış Şeması</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; alignItems: center; min-height: 100vh; background-color: #fff; margin: 0; }
+        .diagram-container { padding: 20px; background: white; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="diagram-container">
+        <div class="mermaid">
+            sequenceDiagram
+                participant Dev as Geliştirici
+                participant Git as GitHub (Depo)
+                participant Action as GitHub Actions
+                participant Cloud as Vercel / Render
+
+                Dev->>Git: Yeni Kod Gönderimi (git push)
+                Git->>Action: Otomatik Webhook Tetikleme
+                activate Action
+                Action->>Action: Bağımlılıkları Kur (npm install)
+                Action->>Action: Kodu Derle (Build)
+                Action->>Cloud: Yeni Sürümü Dağıt (Deploy)
+                deactivate Action
+                Cloud-->>Dev: Canlı Ortam Güncellendi
+        </div>
+    </div>
+</body>
+</html>
