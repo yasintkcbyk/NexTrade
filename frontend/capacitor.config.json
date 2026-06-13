@@ -1,5 +1,10 @@
 {
   "appId": "com.yasin.nextrade",
   "appName": "NexTrade",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
 }
