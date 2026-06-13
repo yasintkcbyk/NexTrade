@@ -97,7 +97,7 @@ export default function NewsPage({ onSummarizeNews }) {
                   <div className="news-title">{news.title}</div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
-                  <button className="news-ai-btn" onClick={e => { e.stopPropagation(); onSummarizeNews && onSummarizeNews(news.title); }}>
+                  <button aria-label="Yapay Zeka ile Özetle" className="news-ai-btn" onClick={e => { e.stopPropagation(); onSummarizeNews && onSummarizeNews(news.title); }}>
                     <Sparkles size={10} /> {t('aiAnalyze')}
                   </button>
                   <ExternalLink size={12} style={{ color: 'var(--text-dim)' }} />

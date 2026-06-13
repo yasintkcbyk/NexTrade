@@ -71,7 +71,7 @@ export default function AIChat({ selectedAsset }) {
               {t('aiAssistant')}
               <div className="chat-online-dot" />
             </div>
-            <button className="icon-btn" onClick={() => setOpen(false)}><X size={14} /></button>
+            <button aria-label="Kapat" className="icon-btn" onClick={() => setOpen(false)}><X size={14} /></button>
           </div>
 
           <div className="chat-messages">

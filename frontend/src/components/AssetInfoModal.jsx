@@ -390,7 +390,7 @@ export default function AssetInfoModal({ asset, onClose, onSummarizeNews, curren
                 {CURRENCIES[currency]?.symbol || '$'}{((asset.price || 0) * (rates[currency] || 1)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
               </div>
             </div>
-            <button className="icon-btn" onClick={onClose}><X size={15} /></button>
+            <button aria-label="Kapat" className="icon-btn" onClick={onClose}><X size={15} /></button>
           </div>
         </div>
 
@@ -446,7 +446,7 @@ export default function AssetInfoModal({ asset, onClose, onSummarizeNews, curren
                       onMouseLeave={e => e.target.style.color = 'var(--text-primary)'}>
                       {news.title}
                     </a>
-                    <button className="news-ai-btn" onClick={() => onSummarizeNews && onSummarizeNews(news.title)}>
+                    <button aria-label="Yapay Zeka ile Özetle" className="news-ai-btn" onClick={() => onSummarizeNews && onSummarizeNews(news.title)}>
                       <Sparkles size={10} /> {t('aiAnalyze')}
                     </button>
                   </div>

@@ -194,7 +194,7 @@ export default function MarketPage({ activeTab, setActiveTab, selectedAsset, set
               <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 700, color: 'var(--accent-purple)', fontFamily: 'Space Grotesk, sans-serif' }}>
                 <Sparkles size={18} /> {selectedAsset.symbol} — AI Teknik Analiz
               </span>
-              <button className="icon-btn" onClick={() => setShowAnalysisModal(false)}><X size={15} /></button>
+              <button aria-label="Kapat" className="icon-btn" onClick={() => setShowAnalysisModal(false)}><X size={15} /></button>
             </div>
             <div className="analysis-modal-body">
               {aiAnalysis ? (
