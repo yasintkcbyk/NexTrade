@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
 # Bağımlılık: Sadece Adminlerin erişimi için
 def get_admin_user(current_user: User = Depends(get_current_user)):
-    if getattr(current_user, "is_admin", False) is not True:
+    if not getattr(current_user, "is_admin", False):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Bu işlem için yönetici yetkisi gereklidir."

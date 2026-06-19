@@ -99,6 +99,12 @@ async def startup_event():
         except Exception as e:
             db.rollback()
             logging.error(f"Failed to create admin: {e}")
+    else:
+        # Eğer admin hesabı varsa ama is_admin False olarak kaldıysa düzelt (Örn. migration sonrası)
+        if not getattr(admin_user, "is_admin", False):
+            admin_user.is_admin = True
+            db.commit()
+            
     db.close()
 
     # Arka plan işlemlerini migration bittikten SONRA başlat
