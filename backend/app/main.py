@@ -56,7 +56,6 @@ app.include_router(admin.router)
 @app.on_event("startup")
 async def startup_event():
     """Sunucu başladığında arka planda fiyat takip döngüsünü başlat."""
-    asyncio.create_task(check_prices_periodically())
     
     # Varsayılan admin hesabını kontrol et ve oluştur (Canlı sunucu migration dahil)
     db = SessionLocal()
@@ -67,16 +66,19 @@ async def startup_event():
     # Canlı sunucuda tablo önceden varsa 'is_admin' kolonu eksik olabilir. Onu yakalayıp ekliyoruz.
     try:
         admin_user = db.query(User).filter(User.username == "admin").first()
-    except sqlalchemy.exc.OperationalError as e:
-        if "no such column" in str(e).lower() or "is_admin" in str(e).lower():
+    except Exception as e:
+        # Postgres (ProgrammingError) veya SQLite (OperationalError) fırlatabilir.
+        err_str = str(e).lower()
+        if "no such column" in err_str or "is_admin" in err_str or "does not exist" in err_str:
             # Veritabanını rollback yap ve tabloyu alter et
             db.rollback()
             try:
-                db.execute(sqlalchemy.text('ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT 0'))
+                db.execute(sqlalchemy.text('ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT FALSE'))
                 db.commit()
                 admin_user = db.query(User).filter(User.username == "admin").first()
             except Exception as inner_e:
                 logging.error(f"Migration failed: {inner_e}")
+                db.rollback()
                 admin_user = None
         else:
             db.rollback()
@@ -98,6 +100,9 @@ async def startup_event():
             db.rollback()
             logging.error(f"Failed to create admin: {e}")
     db.close()
+
+    # Arka plan işlemlerini migration bittikten SONRA başlat
+    asyncio.create_task(check_prices_periodically())
 
 
 @app.get("/")
