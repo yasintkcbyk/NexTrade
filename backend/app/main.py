@@ -58,11 +58,30 @@ async def startup_event():
     """Sunucu başladığında arka planda fiyat takip döngüsünü başlat."""
     asyncio.create_task(check_prices_periodically())
     
-    # Varsayılan admin hesabını kontrol et ve oluştur
+    # Varsayılan admin hesabını kontrol et ve oluştur (Canlı sunucu migration dahil)
     db = SessionLocal()
     from app.models import User
     from app.utils.auth_utils import get_password_hash
-    admin_user = db.query(User).filter(User.username == "admin").first()
+    import sqlalchemy
+
+    # Canlı sunucuda tablo önceden varsa 'is_admin' kolonu eksik olabilir. Onu yakalayıp ekliyoruz.
+    try:
+        admin_user = db.query(User).filter(User.username == "admin").first()
+    except sqlalchemy.exc.OperationalError as e:
+        if "no such column" in str(e).lower() or "is_admin" in str(e).lower():
+            # Veritabanını rollback yap ve tabloyu alter et
+            db.rollback()
+            try:
+                db.execute(sqlalchemy.text('ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT 0'))
+                db.commit()
+                admin_user = db.query(User).filter(User.username == "admin").first()
+            except Exception as inner_e:
+                logging.error(f"Migration failed: {inner_e}")
+                admin_user = None
+        else:
+            db.rollback()
+            admin_user = None
+
     if not admin_user:
         hashed_pw = get_password_hash("admin")
         new_admin = User(
@@ -72,8 +91,12 @@ async def startup_event():
             full_name="System Administrator",
             is_admin=True
         )
-        db.add(new_admin)
-        db.commit()
+        try:
+            db.add(new_admin)
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            logging.error(f"Failed to create admin: {e}")
     db.close()
 
 
