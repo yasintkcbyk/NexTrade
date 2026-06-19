@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { TrendingUp, BarChart2, Newspaper, Bell, Calculator, LogOut, Wifi, Search, Wallet, Moon, Sun } from 'lucide-react';
+import { TrendingUp, BarChart2, Newspaper, Bell, Calculator, LogOut, Wifi, Search, Wallet, Moon, Sun, Shield } from 'lucide-react';
 import { useAppContext } from './context/AppContext';
 import { CURRENCIES, LANGUAGES } from './utils/constants';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,6 +28,7 @@ const AlertsPage = lazy(() => import('./pages/AlertsPage'));
 const ConverterPage = lazy(() => import('./pages/ConverterPage'));
 const PortfolioPage = lazy(() => import('./pages/PortfolioPage'));
 const AssetPage = lazy(() => import('./pages/AssetPage'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 
 function AppLayout() {
   const { user, handleLogout, activeModule, marketData, currency, setCurrency, rates, lang, setLang, t, theme, setTheme, lastUpdated } = useAppContext();
@@ -63,12 +64,17 @@ function AppLayout() {
     { path: '/converter', id: 'converter', icon: <Calculator size={17} />, label: t('converter') },
   ];
 
+  if (user?.is_admin) {
+    navItems.push({ path: '/admin', id: 'admin', icon: <Shield size={17} />, label: 'Admin Paneli' });
+  }
+
   const getPageTitle = () => {
     if (currentPath === '/') return t('marketView');
     if (currentPath === '/portfolio') return t('portfolio');
     if (currentPath === '/news') return t('marketNews');
     if (currentPath === '/alerts') return t('priceAlerts');
     if (currentPath === '/converter') return t('assetConverter');
+    if (currentPath === '/admin') return 'Yönetici Paneli';
     return '';
   };
 
@@ -126,6 +132,17 @@ function AppLayout() {
       <main className="main-content">
         <TickerBand marketData={marketData} currency={currency} rates={rates} />
 
+        {/* Global Announcements Banner */}
+        {useAppContext().announcements?.map(ann => (
+          <div key={ann.id} style={{ 
+            background: 'var(--accent-blue)', color: 'white', padding: '10px 20px', 
+            fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            borderBottom: '1px solid rgba(255,255,255,0.1)'
+          }}>
+            <Bell size={14} /> <strong>{ann.title}:</strong> {ann.content}
+          </div>
+        ))}
+
         <div className="topbar">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span className="topbar-title">
@@ -150,6 +167,17 @@ function AppLayout() {
               title={theme === 'dark' ? 'Aydınlık Mod' : 'Karanlık Mod'}
             >
               {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+            </button>
+            <button
+              className="mobile-logout-btn"
+              onClick={handleLogout}
+              title={t('logout')}
+              style={{
+                background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--accent-red)',
+                width: 32, height: 32, borderRadius: '50%', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'var(--transition-fast)'
+              }}
+            >
+              <LogOut size={15} />
             </button>
             <select
               aria-label="Dil Seçimi"
@@ -192,6 +220,7 @@ function AppLayout() {
                 <Route path="/news" element={<PageTransition><NewsPage onSummarizeNews={handleSummarizeNews} /></PageTransition>} />
                 <Route path="/alerts" element={<PageTransition><AlertsPage /></PageTransition>} />
                 <Route path="/converter" element={<PageTransition><ConverterPage /></PageTransition>} />
+                <Route path="/admin" element={<PageTransition><AdminDashboard /></PageTransition>} />
                 <Route path="/asset/:id" element={<PageTransition><AssetPage /></PageTransition>} />
                 <Route path="*" element={<PageTransition><div style={{ padding: 20, color: 'var(--text-primary)' }}>Page Not Found</div></PageTransition>} />
               </Routes>

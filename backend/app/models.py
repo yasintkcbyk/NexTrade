@@ -26,6 +26,7 @@ class User(Base):
     hashed_password = Column(String)
     full_name = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
+    is_admin = Column(Boolean, default=False)
     telegram_chat_id = Column(String, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
@@ -48,3 +49,12 @@ class PortfolioItem(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     owner = relationship("User", back_populates="portfolio_items")
+
+class Announcement(Base):
+    __tablename__ = "announcements"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    content = Column(String)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())

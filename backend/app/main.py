@@ -7,10 +7,10 @@ logging.basicConfig(
 )
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
-from app.routers import stocks, crypto, alerts, ai, market, auth, asset_info, portfolio
+from app.routers import stocks, crypto, alerts, ai, market, auth, asset_info, portfolio, admin
 
 from app.services.alert_checker import check_prices_periodically
-from app.database import engine, Base
+from app.database import engine, Base, SessionLocal
 import app.models
 
 # Veritabanı tablolarını fiziksel olarak (sqlite dosyasına) oluşturur
@@ -49,6 +49,7 @@ app.include_router(ai.router)
 app.include_router(market.router)
 app.include_router(asset_info.router)
 app.include_router(portfolio.router)
+app.include_router(admin.router)
 
 
 
@@ -56,6 +57,24 @@ app.include_router(portfolio.router)
 async def startup_event():
     """Sunucu başladığında arka planda fiyat takip döngüsünü başlat."""
     asyncio.create_task(check_prices_periodically())
+    
+    # Varsayılan admin hesabını kontrol et ve oluştur
+    db = SessionLocal()
+    from app.models import User
+    from app.utils.auth_utils import get_password_hash
+    admin_user = db.query(User).filter(User.username == "admin").first()
+    if not admin_user:
+        hashed_pw = get_password_hash("admin")
+        new_admin = User(
+            username="admin",
+            email="admin@nexttrade.com",
+            hashed_password=hashed_pw,
+            full_name="System Administrator",
+            is_admin=True
+        )
+        db.add(new_admin)
+        db.commit()
+    db.close()
 
 
 @app.get("/")

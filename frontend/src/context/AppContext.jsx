@@ -21,6 +21,7 @@ export function AppProvider({ children }) {
   const [lang, setLang] = useState(() => localStorage.getItem('nt_lang') || 'TR');
   const [theme, setTheme] = useState(() => localStorage.getItem('nt_theme') || 'dark');
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [announcements, setAnnouncements] = useState([]);
 
   const t = useCallback((key) => TRANSLATIONS[lang]?.[key] || key, [lang]);
 
@@ -61,11 +62,21 @@ export function AppProvider({ children }) {
     }
   }, []);
 
+  const fetchAnnouncements = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/admin/public/announcements`);
+      if (res.data) setAnnouncements(res.data);
+    } catch (e) {
+      console.error('Announcements fetch error:', e);
+    }
+  }, []);
+
   useEffect(() => {
     fetchMarket();
+    fetchAnnouncements();
     const interval = setInterval(fetchMarket, 30000);
     return () => clearInterval(interval);
-  }, [fetchMarket]);
+  }, [fetchMarket, fetchAnnouncements]);
 
   const toggleFavorite = useCallback((e, symbol) => {
     if (e) e.stopPropagation();
@@ -114,6 +125,7 @@ export function AppProvider({ children }) {
     lang, setLang, t,
     theme, setTheme,
     lastUpdated,
+    announcements, fetchAnnouncements,
     API_BASE_URL
   }), [
     user, handleLogout,
@@ -122,7 +134,7 @@ export function AppProvider({ children }) {
     currency, rates,
     lang, t,
     theme,
-    lastUpdated
+    lastUpdated, announcements
   ]);
 
   return (

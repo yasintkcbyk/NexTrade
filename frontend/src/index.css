@@ -1984,7 +1984,12 @@ code, .mono {
   .market-list-panel { width: 360px; min-width: 360px; }
 }
 
+.mobile-logout-btn {
+  display: none !important;
+}
+
 @media (max-width: 900px) {
+  .mobile-logout-btn { display: flex !important; }
   .market-list-panel { width: 300px; min-width: 300px; }
   .sidebar { width: 60px; min-width: 60px; }
   .sidebar-logo-text, .nav-btn span, .nav-section-label, .sidebar-user { display: none; }

@@ -188,6 +188,12 @@ export default function LoginPage({ onLogin }) {
           )}
         </div>
 
+        {mode === 'login' && (
+          <div style={{ textAlign: 'center', marginTop: 10, fontSize: 11, color: 'var(--text-dim)' }}>
+            <i>İpucu: Yönetici girişi için <b>admin / admin</b> kullanabilirsiniz.</i>
+          </div>
+        )}
+
         {/* Version badge */}
         <div style={{ textAlign: 'center', marginTop: 20, fontSize: 10, color: 'var(--text-dim)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
           nextTrade v2.0 · AI Yatırım Platformu
