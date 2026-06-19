@@ -101,9 +101,13 @@ async def startup_event():
             logging.error(f"Failed to create admin: {e}")
     else:
         # Eğer admin hesabı varsa ama is_admin False olarak kaldıysa düzelt (Örn. migration sonrası)
-        if not getattr(admin_user, "is_admin", False):
-            admin_user.is_admin = True
-            db.commit()
+        try:
+            if not getattr(admin_user, "is_admin", False):
+                admin_user.is_admin = True
+                db.commit()
+        except Exception as e:
+            db.rollback()
+            logging.error(f"Failed to update admin flag: {e}")
             
     db.close()
 
