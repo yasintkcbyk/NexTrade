@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from pydantic import BaseModel
@@ -96,7 +96,7 @@ def get_all_announcements(admin_user: User = Depends(get_admin_user), db: Sessio
     return db.query(Announcement).order_by(Announcement.created_at.desc()).all()
 
 @router.post("/announcements", response_model=AnnouncementResponse)
-def create_announcement(data: AnnouncementCreate, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+def create_announcement(data: AnnouncementCreate, background_tasks: BackgroundTasks, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
     """Sisteme yeni bir duyuru ekler."""
     new_announcement = Announcement(
         title=data.title,
@@ -107,19 +107,17 @@ def create_announcement(data: AnnouncementCreate, admin_user: User = Depends(get
     db.commit()
     db.refresh(new_announcement)
     
-    # Telegram Gönderimi
+    # Telegram Gönderimi (Arka planda çalışır, API'yi bloklamaz veya sunucuyu çökertmez)
     if data.send_to_telegram:
-        # Chat ID'si olan tüm aktif kullanıcıları bul
         users_with_tg = db.query(User).filter(User.telegram_chat_id != None, User.is_active == True).all()
         message = f"📢 *YENİ DUYURU: {data.title}*\n\n{data.content}\n\n_nextTrade Yönetimi_"
         
-        # Asenkron bir görev olarak gönderimleri başlat ki API isteği gecikmesin
-        def send_bulk_messages():
-            for u in users_with_tg:
+        def send_bulk_messages(users, msg):
+            for u in users:
                 if u.telegram_chat_id:
-                    send_telegram_alert(message, chat_id=u.telegram_chat_id)
-        
-        asyncio.create_task(asyncio.to_thread(send_bulk_messages))
+                    send_telegram_alert(msg, chat_id=u.telegram_chat_id)
+                    
+        background_tasks.add_task(send_bulk_messages, users_with_tg, message)
         
     return new_announcement
 
