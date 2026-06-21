@@ -6,12 +6,18 @@
 node_modules/
 dist/
 .npm/
+lint-output.txt
 
 # Python / FastAPI (Backend)
 __pycache__/
 venv/
 env/
+.venv/
 *.pyc
+
+# Geçici Dosyalar
+temp.py
+*.log
 
 # SQLite Veritabanı
 *.db
